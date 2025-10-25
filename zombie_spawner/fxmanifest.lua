@@ -1,8 +1,8 @@
 fx_version 'cerulean'
-game 'rdr3'
+game 'rdr2'
 
-author 'Votre Nom'
-description 'Script de spawn de zombies pour RedM'
+author 'MrAnthax'
+description 'Permet de spawn des zombies dans RedM'
 version '1.0.0'
 
 client_scripts {
