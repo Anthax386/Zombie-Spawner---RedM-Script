@@ -68,6 +68,7 @@ Config.zombieStats = {
     speed = 1.0,
     aggression = 0.8,
     spawnRadius = 50.0,
+    maxZombies = 10
 }
 
 -- ============================================================================
@@ -92,12 +93,25 @@ Config.zombieStats = {
 --   1 = Défensif (recule)
 --   2 = Offensif (fonce)
 --   3 = Flanking (contourne l'ennemi)
+--
+-- - alwaysFight: Attribut de combat RedM
+--   Valeur: 46 (constante RedM)
+--   Effet: Force le zombie à toujours combattre quand il rencontre un ennemi
+--   Modification: Changez cette valeur si vous utilisez d'autres attributs RedM
+--
+-- - useMeleeWeapons: Attribut de combat RedM
+--   Valeur: 5 (constante RedM)
+--   Effet: Permet au zombie d'utiliser des armes de mêlée (couteaux, etc.)
+--   Modification: Changez cette valeur si vous utilisez d'autres attributs RedM
 -- ============================================================================
 
 Config.combatBehavior = {
-    combatAbility = 2,
-    combatRange = 0,
-    combatMovement = 2
+    combatAbility = 2,       -- 0=Novice, 1=Intermédiaire, 2=Expert
+    combatRange = 0,         -- 0=Proche, 1=Moyen, 2=Loin
+    combatMovement = 2,      -- 0=Stationnaire, 1=Défensif, 2=Offensif, 3=Flanking
+    -- Attributs de combat (SetPedCombatAttributes)
+    alwaysFight = 46,        -- Attribut: toujours combattre
+    useMeleeWeapons = 5      -- Attribut: peut utiliser des armes de mêlée
 }
 
 -- ============================================================================
@@ -151,12 +165,61 @@ Config.threadSettings = {
 }
 
 -- ============================================================================
+-- CONFIGURATION DU SPAWN ALÉATOIRE SUR LA MAP
+-- ============================================================================
+-- EXPLICATION:
+-- Ces paramètres contrôlent le spawn aléatoire de zombies sur la map
+--
+-- PARAMÈTRES:
+-- - enabled: Active/désactive le spawn aléatoire (true/false)
+--   Défaut: false (désactivé)
+--
+-- - spawnInterval: Intervalle entre chaque spawn en millisecondes
+--   Défaut: 10000 (10 secondes)
+--   Note: Plus bas = plus fréquent (mais plus gourmand en ressources)
+--
+-- - spawnRadius: Rayon de spawn autour du joueur en mètres
+--   Défaut: 200.0
+--   Note: Utilisé pour calculer la zone de spawn aléatoire (non modifiable en jeu)
+--
+-- - minDistance: Distance minimale du joueur pour spawner
+--   Défaut: 50.0
+--   Note: Les zombies ne spawnent pas trop près du joueur
+--
+-- - maxDistance: Distance maximale du joueur pour spawner
+--   Défaut: 200.0
+--   Note: Les zombies ne spawnent pas trop loin du joueur
+--
+-- - maxRandomZombies: Nombre maximum de zombies aléatoires simultanés
+--   Défaut: 5
+--   Note: Indépendant de maxZombies (zombies manuels)
+--
+-- - spawnChance: Pourcentage de chance de spawn à chaque intervalle
+--   Défaut: 0.6 (60%)
+--   Note: Valeur entre 0 et 100 (en pourcentage)
+--
+-- - defaultSearchRadius: Rayon par défaut pour les commandes de détection
+--   Défaut: 100.0
+--   Note: Peut être overridé en passant un rayon en paramètre
+-- ============================================================================
+
+Config.randomSpawn = {
+    enabled = false,             -- Désactivé par défaut, mettez à true pour activer
+    spawnInterval = 10000,       -- Spawn toutes les 10 secondes
+    spawnRadius = 200.0,         -- Rayon de spawn de 200 mètres
+    minDistance = 50.0,          -- Minimum 50 mètres du joueur
+    maxDistance = 200.0,         -- Maximum 200 mètres du joueur
+    maxRandomZombies = 5,        -- Maximum 5 zombies aléatoires
+    spawnChance = 0.6,           -- 60% de chance de spawn à chaque intervalle
+    defaultSearchRadius = 100.0  -- Rayon par défaut pour les commandes /zombiesradius et /zombieslist
+}
+
+-- ============================================================================
 -- CONFIGURATION DES MESSAGES
 -- ============================================================================
 -- EXPLICATION:
 -- Ces paramètres contrôlent l'apparence des messages du chat
 --
--- PARAMÈTRES:
 -- - colors: Couleurs des messages en RGB (0-255)
 -- - prefix: Préfixe des messages
 -- ============================================================================

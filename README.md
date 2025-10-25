@@ -59,7 +59,68 @@ Redémarrez votre serveur et le script sera actif!
 - `/spawnzombie 5` - Spawn 5 zombies
 - `/spawnzombie 10` - Spawn 10 zombies
 
-### Modifier les Statistiques
+### Activer/Désactiver le Spawn Aléatoire
+```
+/randomspawn [on/off]
+```
+**Exemples:**
+- `/randomspawn on` - Active le spawn aléatoire de zombies sur la map
+- `/randomspawn off` - Désactive le spawn aléatoire
+- `/randomspawn` - Affiche l'état actuel
+
+### Modifier les Paramètres du Spawn Aléatoire
+```
+/randomspawnstats [paramètre] [valeur]
+```
+**Paramètres disponibles:**
+- `spawnInterval` - Intervalle entre chaque spawn en millisecondes
+- `minDistance` - Distance minimale du joueur en mètres
+- `maxDistance` - Distance maximale du joueur en mètres
+- `maxRandomZombies` - Nombre maximum de zombies aléatoires
+- `spawnChance` - Pourcentage de chance de spawn (0-100)
+
+**Exemples:**
+```
+/randomspawnstats maxRandomZombies 10    -- Permet jusqu'à 10 zombies aléatoires
+/randomspawnstats spawnInterval 5000     -- Spawn toutes les 5 secondes
+/randomspawnstats minDistance 100        -- Minimum 100 mètres du joueur
+/randomspawnstats spawnChance 80         -- 80% de chance de spawn
+```
+
+### Afficher le Statut des Zombies
+```
+/zombiestatus
+```
+**Affiche:**
+- Nombre total de zombies vivants
+- Nombre de zombies spawnés manuellement
+- Nombre de zombies spawnés aléatoirement
+
+### Vérifier les Zombies Aléatoires dans un Rayon
+```
+/zombiesradius [rayon]
+```
+**Description:** Compte le nombre de zombies aléatoires dans un rayon autour du joueur
+
+**Exemples:**
+- `/zombiesradius` - Affiche les zombies dans un rayon de 100m (par défaut)
+- `/zombiesradius 150` - Affiche les zombies dans un rayon de 150m
+- `/zombiesradius 50` - Affiche les zombies dans un rayon de 50m
+
+### Afficher la Liste des Zombies Proches
+```
+/zombieslist [rayon]
+```
+**Description:** Affiche la liste détaillée des zombies aléatoires avec leurs distances
+
+**Exemples:**
+- `/zombieslist` - Liste les zombies dans un rayon de 100m (par défaut)
+- `/zombieslist 200` - Liste les zombies dans un rayon de 200m
+- `/zombieslist 75` - Liste les zombies dans un rayon de 75m
+
+**Résultat:** Affiche chaque zombie avec sa distance exacte (triés du plus proche au plus loin)
+
+### Modifier les Statistiques des Zombies
 ```
 /setzombiestats [stat] [valeur]
 ```
@@ -159,6 +220,20 @@ Config.relationships = {
     gangRelationship = 5,        -- 5 = Haine (attaquent les gangs)
     animalRelationship = 5,      -- 5 = Haine (attaquent les animaux)
     wildAnimalRelationship = 5   -- 5 = Haine (attaquent les animaux sauvages)
+}
+```
+
+**Pour configurer le spawn aléatoire sur la map:**
+
+```lua
+Config.randomSpawn = {
+    enabled = false,             -- Désactivé par défaut (mettez à true pour activer)
+    spawnInterval = 10000,       -- Spawn toutes les 10 secondes
+    spawnRadius = 200.0,         -- Rayon de spawn de 200 mètres
+    minDistance = 50.0,          -- Minimum 50 mètres du joueur
+    maxDistance = 200.0,         -- Maximum 200 mètres du joueur
+    maxRandomZombies = 5,        -- Maximum 5 zombies aléatoires
+    spawnChance = 0.6            -- 60% de chance de spawn à chaque intervalle
 }
 ```
 
@@ -370,6 +445,22 @@ SetPedCombatRange(zombie, 2)
 -- Mouvement au combat (0 = stationnaire, 1 = défensif, 2 = offensif, 3 = flanking)
 SetPedCombatMovement(zombie, 3)
 ```
+
+---
+
+## 🐛 Corrections et Améliorations
+
+### Bug Fix: Compteur de Zombies Aléatoires
+
+**Problème:** Le compteur de zombies aléatoires augmentait mais ne diminuait jamais, ce qui empêchait le spawn de nouveaux zombies aléatoires après un certain temps.
+
+**Solution:** 
+- Chaque zombie est maintenant marqué avec un flag `isRandom` (true/false)
+- La fonction `GetRandomZombieCount()` compte dynamiquement les zombies aléatoires vivants
+- Le compteur se recalcule automatiquement à chaque vérification
+- Les zombies aléatoires morts sont correctement retirés du comptage
+
+**Résultat:** Le spawn aléatoire fonctionne maintenant correctement indéfiniment!
 
 ---
 
