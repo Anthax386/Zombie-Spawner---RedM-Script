@@ -27,6 +27,7 @@ Un script LUA complet pour Red Dead Redemption 2 (RedM) qui permet de créer et 
 resources/zombie_spawner/
 ├── fxmanifest.lua
 ├── zombie_spawner.lua
+├── config.lua
 └── README.md
 ```
 
@@ -34,6 +35,7 @@ resources/zombie_spawner/
 Copiez les fichiers suivants dans le dossier `zombie_spawner/`:
 - `fxmanifest.lua` - Configuration de la ressource
 - `zombie_spawner.lua` - Script principal
+- `config.lua` - Fichier de configuration (modèles et paramètres)
 - `README.md` - Documentation
 
 ### Étape 4: Activation
@@ -83,9 +85,19 @@ Redémarrez votre serveur et le script sera actif!
 
 ## ⚙️ Configuration
 
+### Fichier de Configuration (config.lua)
+
+Le script utilise un fichier `config.lua` séparé pour gérer tous les paramètres. Cela permet de modifier facilement les comportements sans toucher au code principal.
+
+**Avantages:**
+- Modification facile des paramètres
+- Pas besoin de redémarrer le script pour changer les modèles
+- Organisation claire et centralisée
+- Facile à sauvegarder et partager
+
 ### Configuration par Défaut
 
-Le script utilise ces paramètres par défaut:
+Le script utilise ces paramètres par défaut (définis dans `config.lua`):
 
 ```lua
 local zombieConfig = {
@@ -101,10 +113,12 @@ local zombieConfig = {
 
 ### Modifier la Configuration par Défaut
 
-Ouvrez `zombie_spawner.lua` et modifiez la section `zombieConfig`:
+Ouvrez le fichier `config.lua` et modifiez les sections souhaitées:
+
+**Pour modifier les statistiques des zombies:**
 
 ```lua
-local zombieConfig = {
+Config.zombieStats = {
     health = 300.0,          -- Augmentez la santé
     damageModifier = 2.0,    -- Augmentez les dégâts
     accuracy = 0.7,          -- Augmentez la précision
@@ -115,18 +129,56 @@ local zombieConfig = {
 }
 ```
 
+**Pour modifier les modèles de zombies:**
+
+```lua
+Config.zombieModels = {
+    "A_M_M_UniCorpse_01",
+    "A_M_M_UniCorpse_02",
+    "A_C_Bear_01",
+    "mon_modele_personnalise"
+}
+```
+
+**Pour modifier le comportement au combat:**
+
+```lua
+Config.combatBehavior = {
+    combatAbility = 2,       -- 0=Novice, 1=Intermédiaire, 2=Expert
+    combatRange = 2,         -- 0=Proche, 1=Moyen, 2=Loin
+    combatMovement = 3       -- 0=Stationnaire, 1=Défensif, 2=Offensif, 3=Flanking
+}
+```
+
+**Pour modifier les relations avec les entités:**
+
+```lua
+Config.relationships = {
+    playerRelationship = 5,      -- 5 = Haine (attaquent le joueur)
+    civilianRelationship = 5,    -- 5 = Haine (attaquent les civils)
+    gangRelationship = 5,        -- 5 = Haine (attaquent les gangs)
+    animalRelationship = 5,      -- 5 = Haine (attaquent les animaux)
+    wildAnimalRelationship = 5   -- 5 = Haine (attaquent les animaux sauvages)
+}
+```
+
+**Après modification, redémarrez la ressource:**
+```
+/restart zombie_spawner
+```
+
 ---
 
 ## 🧟 Modèles de Zombies
 
 ### Modèles par Défaut
 
-Le script utilise ces modèles de zombies:
+Le script utilise ces modèles de zombies (définis dans `config.lua`):
 
 ```lua
-local zombieModels = {
-    "A_C_Bear_01",                      -- Ours
-    "amsp_robsdgunsmith_males_01"       -- PNJ personnalisé
+Config.zombieModels = {
+    "A_C_Bear_01",
+    "amsp_robsdgunsmith_males_01"
 }
 ```
 
@@ -155,10 +207,10 @@ Voici une liste de modèles que vous pouvez utiliser:
 
 ### Ajouter des Modèles
 
-Modifiez simplement la table `zombieModels`:
+Modifiez simplement la table `Config.zombieModels` dans `config.lua`:
 
 ```lua
-local zombieModels = {
+Config.zombieModels = {
     "A_M_M_UniCorpse_01",
     "A_M_M_UniCorpse_02",
     "A_C_Bear_01",              -- Nouveau modèle
@@ -166,6 +218,8 @@ local zombieModels = {
     "amsp_robsdgunsmith_males_01"
 }
 ```
+
+Puis redémarrez la ressource avec `/restart zombie_spawner`
 
 ---
 

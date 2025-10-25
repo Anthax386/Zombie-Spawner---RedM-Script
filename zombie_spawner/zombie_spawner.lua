@@ -1,30 +1,21 @@
+-- ============================================================================
+-- IMPORT DE LA CONFIGURATION
+-- ============================================================================
+-- Charge le fichier config.lua qui contient tous les paramètres
+require 'config'
+
+-- ============================================================================
+-- VARIABLES GLOBALES
+-- ============================================================================
 local spawnedZombies = {}
 
--- ============================================================================
--- TABLE DES MODÈLES DE ZOMBIES DISPONIBLES
--- ============================================================================
-
-local zombieModels = {
-    "A_C_Bear_01",
-    "amsp_robsdgunsmith_males_01"
-    -- Vous pouvez ajouter d'autres modèles ici:
-    -- "A_F_M_UniCorpse_01",  -- Modèle de zombie femme
-    -- "A_F_M_UniCorpse_02",  -- Modèle de zombie femme
-}
-
--- ============================================================================
--- CONFIGURATION DES ZOMBIES
--- Ces paramètres définissent les statistiques par défaut de tous les zombies
--- ============================================================================
-local zombieConfig = {
-    health = 200.0,          -- Points de vie du zombie (200 = santé normale)
-    damageModifier = 1.5,    -- Multiplicateur de dégâts (1.5 = 50% plus de dégâts)
-    accuracy = 0.3,          -- Précision du tir (0.0 = jamais, 1.0 = toujours)
-    speed = 1.0,             -- Vitesse de déplacement (1.0 = normal)
-    aggression = 0.8,        -- Agressivité (0.0 = passif, 1.0 = très agressif)
-    spawnRadius = 50.0,      -- Distance de spawn autour du joueur (en mètres)
-    maxZombies = 10          -- Nombre maximum de zombies simultanés
-}
+-- Copie la configuration dans une variable locale pour utilisation rapide
+local zombieConfig = Config.zombieStats
+local zombieModels = Config.zombieModels
+local combatBehavior = Config.combatBehavior
+local relationships = Config.relationships
+local threadSettings = Config.threadSettings
+local messages = Config.messages
 
 -- ============================================================================
 -- FONCTION: SpawnZombie()
@@ -120,16 +111,16 @@ local function SpawnZombie()
     SetPedCombatAttributes(zombie, 5, true)
     
     -- SetPedCombatAbility() définit le niveau de compétence au combat
-    -- 2 = Expert (très bon au combat)
-    SetPedCombatAbility(zombie, 2)
+    -- Utilise la valeur de la configuration
+    SetPedCombatAbility(zombie, combatBehavior.combatAbility)
     
     -- SetPedCombatRange() définit la distance de combat préférée
-    -- 2 = Far (combat à distance)
-    SetPedCombatRange(zombie, 2)
+    -- Utilise la valeur de la configuration
+    SetPedCombatRange(zombie, combatBehavior.combatRange)
     
     -- SetPedCombatMovement() définit comment le zombie se déplace au combat
-    -- 3 = Flanking (le zombie essaiera de contourner son ennemi)
-    SetPedCombatMovement(zombie, 3)
+    -- Utilise la valeur de la configuration
+    SetPedCombatMovement(zombie, combatBehavior.combatMovement)
     
     -- ========================================================================
     -- CONFIGURATION DES RELATIONS AVEC LE JOUEUR
@@ -141,47 +132,45 @@ local function SpawnZombie()
     SetPedRelationshipGroupHash(zombie, GetHashKey("HATES_PLAYER"))
     
     -- Définit la relation entre le groupe "HATES_PLAYER" et "PLAYER"
-    -- 5 = Hate (haine complète)
-    -- Cela signifie: les zombies détestent le joueur
-    SetRelationshipBetweenGroups(5, GetHashKey("HATES_PLAYER"), GetHashKey("PLAYER"))
+    -- Utilise la valeur de la configuration
+    SetRelationshipBetweenGroups(relationships.playerRelationship, GetHashKey("HATES_PLAYER"), GetHashKey("PLAYER"))
     
     -- Définit la relation inverse: le joueur déteste aussi les zombies
-    SetRelationshipBetweenGroups(5, GetHashKey("PLAYER"), GetHashKey("HATES_PLAYER"))
+    SetRelationshipBetweenGroups(relationships.playerRelationship, GetHashKey("PLAYER"), GetHashKey("HATES_PLAYER"))
     
     -- ========================================================================
     -- CONFIGURATION DES RELATIONS AVEC LES PNJ
     -- ========================================================================
     
     -- Les zombies détestent les PNJ civils
-    -- Cela signifie que les zombies attaqueront les PNJ qu'ils rencontrent
-    SetRelationshipBetweenGroups(5, GetHashKey("HATES_PLAYER"), GetHashKey("CIVILIAN"))
+    -- Utilise la valeur de la configuration
+    SetRelationshipBetweenGroups(relationships.civilianRelationship, GetHashKey("HATES_PLAYER"), GetHashKey("CIVILIAN"))
     
     -- Les PNJ civils détestent aussi les zombies
-    -- Les PNJ fuiront ou combattront les zombies
-    SetRelationshipBetweenGroups(5, GetHashKey("CIVILIAN"), GetHashKey("HATES_PLAYER"))
+    SetRelationshipBetweenGroups(relationships.civilianRelationship, GetHashKey("CIVILIAN"), GetHashKey("HATES_PLAYER"))
     
     -- Les zombies détestent aussi les PNJ de gang
-    SetRelationshipBetweenGroups(5, GetHashKey("HATES_PLAYER"), GetHashKey("GANG"))
+    SetRelationshipBetweenGroups(relationships.gangRelationship, GetHashKey("HATES_PLAYER"), GetHashKey("GANG"))
     
     -- Les PNJ de gang détestent les zombies
-    SetRelationshipBetweenGroups(5, GetHashKey("GANG"), GetHashKey("HATES_PLAYER"))
+    SetRelationshipBetweenGroups(relationships.gangRelationship, GetHashKey("GANG"), GetHashKey("HATES_PLAYER"))
     
     -- ========================================================================
     -- CONFIGURATION DES RELATIONS AVEC LES ANIMAUX
     -- ========================================================================
     
     -- Les zombies détestent les animaux domestiques (chevaux, chiens, etc.)
-    -- Cela signifie que les zombies attaqueront les animaux
-    SetRelationshipBetweenGroups(5, GetHashKey("HATES_PLAYER"), GetHashKey("ANIMAL"))
+    -- Utilise la valeur de la configuration
+    SetRelationshipBetweenGroups(relationships.animalRelationship, GetHashKey("HATES_PLAYER"), GetHashKey("ANIMAL"))
     
     -- Les animaux détestent aussi les zombies
-    SetRelationshipBetweenGroups(5, GetHashKey("ANIMAL"), GetHashKey("HATES_PLAYER"))
+    SetRelationshipBetweenGroups(relationships.animalRelationship, GetHashKey("ANIMAL"), GetHashKey("HATES_PLAYER"))
     
     -- Les zombies détestent les animaux sauvages
-    SetRelationshipBetweenGroups(5, GetHashKey("HATES_PLAYER"), GetHashKey("WILD_ANIMAL"))
+    SetRelationshipBetweenGroups(relationships.wildAnimalRelationship, GetHashKey("HATES_PLAYER"), GetHashKey("WILD_ANIMAL"))
     
     -- Les animaux sauvages détestent les zombies
-    SetRelationshipBetweenGroups(5, GetHashKey("WILD_ANIMAL"), GetHashKey("HATES_PLAYER"))
+    SetRelationshipBetweenGroups(relationships.wildAnimalRelationship, GetHashKey("WILD_ANIMAL"), GetHashKey("HATES_PLAYER"))
     
     -- ========================================================================
     -- ENREGISTREMENT DU ZOMBIE
@@ -246,9 +235,9 @@ end
 Citizen.CreateThread(function()
     -- Boucle infinie: le thread s'exécute indéfiniment
     while true do
-        -- Pause le thread pendant 5000 millisecondes (5 secondes)
+        -- Pause le thread selon l'intervalle défini dans la configuration
         -- Cela évite de surcharger le processeur
-        Citizen.Wait(5000)
+        Citizen.Wait(threadSettings.threadInterval)
         
         -- Nettoie les zombies morts
         CleanupZombies()
@@ -281,11 +270,10 @@ RegisterCommand("spawnzombie", function(source, args, rawCommand)
     end
     
     -- Affiche un message de confirmation dans le chat du jeu
-    -- TriggerEvent() déclenche un événement
-    -- "chat:addMessage" est l'événement pour ajouter un message au chat
+    -- Utilise les paramètres de configuration pour les couleurs et le préfixe
     TriggerEvent("chat:addMessage", {
-        color = {255, 0, 0},                                    -- Couleur rouge
-        args = {"[Zombie Spawner]", "Spawned " .. count .. " zombie(s)"}  -- Message
+        color = messages.colors.success,
+        args = {messages.prefix, "Spawned " .. count .. " zombie(s)"}
     })
 end)
 
@@ -301,8 +289,8 @@ RegisterCommand("setzombiestats", function(source, args, rawCommand)
     if #args < 2 then
         -- Affiche un message d'erreur avec les instructions d'utilisation
         TriggerEvent("chat:addMessage", {
-            color = {255, 0, 0},
-            args = {"[Zombie Spawner]", "Usage: /setzombiestats [stat] [value]"}
+            color = messages.colors.error,
+            args = {messages.prefix, "Usage: /setzombiestats [stat] [value]"}
         })
         return  -- Arrête l'exécution de la fonction
     end
@@ -319,8 +307,8 @@ RegisterCommand("setzombiestats", function(source, args, rawCommand)
     if zombieConfig[stat] == nil then
         -- Affiche un message d'erreur avec les statistiques disponibles
         TriggerEvent("chat:addMessage", {
-            color = {255, 0, 0},
-            args = {"[Zombie Spawner]", "Invalid stat. Available stats: health, damageModifier, accuracy, speed, aggression, spawnRadius, maxZombies"}
+            color = messages.colors.error,
+            args = {messages.prefix, "Invalid stat. Available stats: health, damageModifier, accuracy, speed, aggression, spawnRadius, maxZombies"}
         })
         return
     end
@@ -349,10 +337,10 @@ RegisterCommand("setzombiestats", function(source, args, rawCommand)
         end
     end
     
-    -- Affiche un message de confirmation en vert
+    -- Affiche un message de confirmation
     TriggerEvent("chat:addMessage", {
-        color = {0, 255, 0},
-        args = {"[Zombie Spawner]", "Updated " .. stat .. " to " .. tostring(value)}
+        color = messages.colors.success,
+        args = {messages.prefix, "Updated " .. stat .. " to " .. tostring(value)}
     })
 end)
 
