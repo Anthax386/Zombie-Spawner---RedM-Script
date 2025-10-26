@@ -28,7 +28,7 @@ Un script complet pour créer et gérer des zombies dans votre serveur RedM avec
 - [🆘 Support et Dépannage](#-support-et-dépannage)
 - [📋 Informations Supplémentaires](#-informations-supplémentaires)
 
-## 🔧 Fonctionnalités {#-fonctionnalités}
+## 🔧 Fonctionnalités {#fonctionnalités}
 
 - ✅ **Synchronisation multi-joueurs** complète
 - ✅ **Système de zones** configurables
@@ -38,21 +38,21 @@ Un script complet pour créer et gérer des zombies dans votre serveur RedM avec
 - ✅ **Nettoyage automatique** des entités
 - ✅ **Optimisé performance** avec variables locales
 
-## ⚡ Prérequis Techniques {#-prérequis-techniques}
+## ⚡ Prérequis Techniques {#prérequis-techniques}
 
 - **RedM Server** build 2802 ou supérieur
 - **FiveM/RedM Framework** correctement configuré
 - **Accès administrateur** au serveur de jeu
 - **Connaissance de base** de la configuration Lua (optionnel)
 
-## 🚀  Installation Rapide {#-installation-rapide}
+## 🚀  Installation Rapide {#installation-rapide}
 
 1. **Placez** le dossier dans `resources/`
 2. **Ajoutez** `ensure Zombie-Spawner` dans `server.cfg`
 3. **Redémarrez** votre serveur
 4. **Testez** avec `/zombiecount`
 
-## 📦 Installation Détaillée {#-installation-détaillée}
+## 📦 Installation Détaillée {#installation-détaillée}
 
 ### 1. Installation {#1-installation}
 
@@ -123,7 +123,7 @@ Config.zoneSettings = {
 }
 ```
 
-## 📋 Commandes Disponibles {#-commandes-disponibles}
+## 📋 Commandes Disponibles {#commandes-disponibles}
 
 | Commande | Description | Permission | Exemple |
 |----------|-------------|------------|---------|
@@ -131,7 +131,7 @@ Config.zoneSettings = {
 | `/clearzombies` | Supprime tous les zombies | Admin | `/clearzombies` |
 | `/spawnzombies <zone>` | Spawn un zombie dans une zone | Tous | `/spawnzombies 1` |
 
-## ✅ Vérification de l'Installation {#-vérification-de-linstallation}
+## ✅ Vérification de l'Installation {#vérification-de-linstallation}
 
 1. **Démarrez** votre serveur RedM
 2. **Connectez-vous** au serveur
@@ -147,7 +147,7 @@ Config.zoneSettings = {
    Commandes zombies chargées avec succès !
    ```
 
-## ⚙️ Configuration Détaillée {#-configuration-détaillée}
+## ⚙️ Configuration Détaillée {#configuration-détaillée}
 
 ### Messages {#messages}
 
@@ -314,7 +314,7 @@ Config.combatBehavior = {
 }
 ```
 
-## 🏗️ Architecture Client-Serveur {#-architecture-client-serveur}
+## 🏗️ Architecture Client-Serveur {#architecture-client-serveur}
 
 Le script utilise une architecture **client-serveur** pour une synchronisation optimale :
 
@@ -336,7 +336,7 @@ Le script utilise une architecture **client-serveur** pour une synchronisation o
 3. **Synchronisation** → L'entité est créée pour tous les clients
 4. **Feedback** → Le serveur confirme l'action au client demandeur
 
-## 📁 Structure du Script {#-structure-du-script}
+## 📁 Structure du Script {#structure-du-script}
 
 ```
 Zombie-Spawner/
@@ -349,7 +349,7 @@ Zombie-Spawner/
 └── fxmanifest.lua          # Manifest du script
 ```
 
-## 🆘 Support et Dépannage {#-support-et-dépannage}
+## 🆘 Support et Dépannage {#support-et-dépannage}
 
 ### Problèmes Courants
 
@@ -383,7 +383,7 @@ Zombie-Spawner/
 3. **Redémarrez** le serveur
 4. **Vérifiez** que tout fonctionne
 
-## 📋 Informations Supplémentaires {#-informations-supplémentaires}
+## 📋 Informations Supplémentaires {#informations-supplémentaires}
 
 ### Version et Changelog 
 
