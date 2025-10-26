@@ -520,6 +520,23 @@ Si vous rencontrez des problèmes:
 
 ---
 
+## 🚀 Corrections et Améliorations (Version 2.0.0)
+
+### ✅ Correction du Système de Chat
+- **Problème:** Messages n'apparaissaient pas dans RedM
+- **Solution:** Remplacement de `chat:addMessage` par `chatMessage` compatible RedM
+
+### ✅ Correction du Spawn sur Terrain Varié
+- **Problème:** Zombies spawnaient à Z=0.0 fixe (sous terre ou dans les airs)
+- **Solution:** Utilisation de `GetGroundZFor_3dCoord()` pour calculer la vraie altitude du sol
+- **Résultat:** Zombies spawnent maintenant correctement sur tous les terrains (montagnes, vallées, etc.)
+
+### ✅ Améliorations du Code
+- Meilleure gestion des erreurs et compatibilité RedM
+- Documentation technique améliorée
+
+---
+
 ## 📄 Licence
 
 Ce script est fourni à titre d'exemple. Utilisez-le librement dans vos projets RedM.
@@ -527,4 +544,4 @@ Ce script est fourni à titre d'exemple. Utilisez-le librement dans vos projets 
 ---
 
 **Dernière mise à jour:** 26 Octobre 2025
-**Version:** 1.0.0
+**Version:** 2.0.0

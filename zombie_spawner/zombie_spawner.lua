@@ -16,7 +16,6 @@ local zombieModels = Config.zombieModels
 local combatBehavior = Config.combatBehavior
 local relationships = Config.relationships
 local threadSettings = Config.threadSettings
-local messages = Config.messages
 local randomSpawn = Config.randomSpawn
 
 -- Variables pour tracker les zombies aléatoires
@@ -30,7 +29,6 @@ local lastRandomSpawnTime = 0
 -- UTILITÉ: Évite la duplication de code entre SpawnZombie et SpawnRandomZombie
 -- ============================================================================
 local function ConfigureZombie(zombie)
-    -- Configure les propriétés du zombie
     SetEntityHealth(zombie, zombieConfig.health)
     SetPedAccuracy(zombie, math.floor(zombieConfig.accuracy * 100))
     SetPedMoveRateOverride(zombie, zombieConfig.speed)
@@ -93,12 +91,27 @@ local function SpawnZombie()
     -- GetOffsetFromEntityInWorldCoords() calcule une position relative au joueur
     -- math.random() génère un nombre aléatoire entre 0 et 1
     -- (math.random() - 0.5) * zombieConfig.spawnRadius * 2 = position aléatoire
+    -- 1. Génère d'abord les coordonnées X et Y
     local spawnCoords = GetOffsetFromEntityInWorldCoords(
-        playerPed,                                                    -- Référence: le joueur
-        (math.random() - 0.5) * zombieConfig.spawnRadius * 2,       -- Décalage X aléatoire
-        (math.random() - 0.5) * zombieConfig.spawnRadius * 2,       -- Décalage Y aléatoire
-        0.0                                                           -- Pas de décalage en Z (hauteur)
+        playerPed,
+        (math.random() - 0.5) * zombieConfig.spawnRadius * 2,
+        (math.random() - 0.5) * zombieConfig.spawnRadius * 2,
+        0.0  -- Z temporaire, sera remplacé
     )
+
+    -- 2. Récupère la VRAIE altitude du sol à ces coordonnées
+    local success, groundZ = GetGroundZFor_3dCoord(
+        spawnCoords.x, 
+        spawnCoords.y, 
+        spawnCoords.z,  -- Z de départ (n'importe quelle valeur)
+        false           -- false = ignore l'eau
+    )
+
+    -- 3. Met à jour les coordonnées avec la vraie altitude
+    if success then
+        spawnCoords.z = groundZ
+        -- Maintenant spawnCoords.z contient la vraie altitude du sol !
+    end
     
     -- ========================================================================
     -- CRÉATION DU ZOMBIE
@@ -310,80 +323,38 @@ local function SpawnRandomZombie()
     
     -- Génère une position aléatoire dans le rayon défini
     -- Calcule un angle aléatoire (0 à 360 degrés)
-    local angle = math.rad(math.random(0, 360))
-    
-    -- Calcule une distance aléatoire entre minDistance et maxDistance
-    local distance = math.random(randomSpawn.minDistance * 100, randomSpawn.maxDistance * 100) / 100
-    
-    -- Calcule les coordonnées X et Y en fonction de l'angle et de la distance
-    local spawnX = playerCoords.x + math.cos(angle) * distance
-    local spawnY = playerCoords.y + math.sin(angle) * distance
-    local spawnZ = playerCoords.z
-    
-    -- Choisit un modèle de zombie au hasard
-    local modelHash = GetHashKey(zombieModels[math.random(#zombieModels)])
-    
-    -- Charge le modèle en mémoire
     RequestModel(modelHash)
     while not HasModelLoaded(modelHash) do
-        Wait(1)
+        Wait(100)
     end
-    
-    -- Crée le zombie à la position calculée
+
+    -- Crée le zombie avec des paramètres minimaux
     local zombie = CreatePed(
         modelHash,
-        spawnX,
-        spawnY,
-        spawnZ,
+        playerCoords.x + 2.0,  -- 2 mètres devant le joueur
+        playerCoords.y,
+        playerCoords.z,
         0.0,
         true,
         true
     )
-    
-    -- Configure le zombie avec la fonction réutilisable
-    ConfigureZombie(zombie)
-    
-    -- Ajoute le zombie à la table de suivi
-    -- Marque ce zombie comme aléatoire avec isRandom = true
+
+    -- Configuration de base
+    SetEntityHealth(zombie, 100.0)
+    SetPedRelationshipGroupHash(zombie, GetHashKey("HATES_PLAYER"))
+
+    -- Ajoute à la liste
     table.insert(spawnedZombies, {
         handle = zombie,
-        lastPos = vector3(spawnX, spawnY, spawnZ),
-        isRandom = true  -- Ce zombie est aléatoire
+        lastPos = playerCoords,
+        isRandom = false
     })
-    
+
     -- Libère la mémoire
     SetModelAsNoLongerNeeded(modelHash)
-    
+
     return zombie
 end
-
--- ============================================================================
--- THREAD PRINCIPAL
--- DESCRIPTION: Boucle qui s'exécute en continu pour gérer les zombies
--- ============================================================================
-Citizen.CreateThread(function()
-    -- Boucle infinie: le thread s'exécute indéfiniment
-    while true do
-        -- Pause le thread selon l'intervalle défini dans la configuration
-        -- Cela évite de surcharger le processeur
-        Citizen.Wait(threadSettings.threadInterval)
-        
-        -- Nettoie les zombies morts
-        CleanupZombies()
-        
-        -- Vérifie si on peut spawner plus de zombies
-        -- #spawnedZombies = nombre actuel de zombies
-        -- Si ce nombre est inférieur au maximum autorisé, spawn un nouveau zombie
-        if #spawnedZombies < zombieConfig.maxZombies then
-            SpawnZombie()
-        end
-        
-        -- ====================================================================
-        -- SPAWN ALÉATOIRE SUR LA MAP
-        -- ====================================================================
-        -- Vérifie si le spawn aléatoire est activé
-        if randomSpawn.enabled then
-            -- Récupère le temps actuel en millisecondes
             local currentTime = GetGameTimer()
             
             -- Vérifie si l'intervalle de spawn est écoulé
@@ -428,10 +399,7 @@ RegisterCommand("spawnzombie", function(source, args, rawCommand)
     
     -- Affiche un message de confirmation dans le chat du jeu
     -- Utilise les paramètres de configuration pour les couleurs et le préfixe
-    TriggerEvent("chat:addMessage", {
-        color = messages.colors.success,
-        args = {messages.prefix, "Spawned " .. count .. " zombie(s)"}
-    })
+    TriggerEvent("chatMessage", messages.prefix, messages.colors.success, "Spawned " .. count .. " zombie(s)")
 end)
 
 -- ============================================================================
@@ -445,10 +413,7 @@ RegisterCommand("setzombiestats", function(source, args, rawCommand)
     -- #args = nombre d'arguments fournis
     if #args < 2 then
         -- Affiche un message d'erreur avec les instructions d'utilisation
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.error,
-            args = {messages.prefix, "Usage: /setzombiestats [stat] [value]"}
-        })
+    TriggerEvent("chatMessage", messages.prefix, messages.colors.error, "Usage: /setzombiestats [stat] [value]")
         return  -- Arrête l'exécution de la fonction
     end
     
@@ -463,10 +428,7 @@ RegisterCommand("setzombiestats", function(source, args, rawCommand)
     -- zombieConfig[stat] == nil signifie: la clé n'existe pas
     if zombieConfig[stat] == nil then
         -- Affiche un message d'erreur avec les statistiques disponibles
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.error,
-            args = {messages.prefix, "Invalid stat. Available stats: health, damageModifier, accuracy, speed, aggression, spawnRadius, maxZombies"}
-        })
+        TriggerEvent("chatMessage", messages.prefix, messages.colors.error, "Invalid stat. Available stats: health, damageModifier, accuracy, speed, aggression, spawnRadius, maxZombies")
         return
     end
     
@@ -495,10 +457,7 @@ RegisterCommand("setzombiestats", function(source, args, rawCommand)
     end
     
     -- Affiche un message de confirmation
-    TriggerEvent("chat:addMessage", {
-        color = messages.colors.success,
-        args = {messages.prefix, "Updated " .. stat .. " to " .. tostring(value)}
-    })
+    TriggerEvent("chatMessage", messages.prefix, messages.colors.success, "Updated " .. stat .. " to " .. tostring(value))
 end)
 
 -- ============================================================================
@@ -514,10 +473,7 @@ RegisterCommand("randomspawn", function(source, args, rawCommand)
     if not action then
         -- Affiche l'état actuel du spawn aléatoire
         local status = randomSpawn.enabled and "activé" or "désactivé"
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.info,
-            args = {messages.prefix, "Spawn aléatoire est actuellement " .. status}
-        })
+        TriggerEvent("chatMessage", messages.prefix, messages.colors.info, "Spawn aléatoire est actuellement " .. status)
         return
     end
     
@@ -527,23 +483,14 @@ RegisterCommand("randomspawn", function(source, args, rawCommand)
         -- Active le spawn aléatoire
         randomSpawn.enabled = true
         lastRandomSpawnTime = GetGameTimer()
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.success,
-            args = {messages.prefix, "Spawn aléatoire activé!"}
-        })
+        TriggerEvent("chatMessage", messages.prefix, messages.colors.success, "Spawn aléatoire activé!")
     elseif action == "off" or action == "false" or action == "0" then
         -- Désactive le spawn aléatoire
         randomSpawn.enabled = false
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.success,
-            args = {messages.prefix, "Spawn aléatoire désactivé!"}
-        })
+        TriggerEvent("chatMessage", messages.prefix, messages.colors.success, "Spawn aléatoire désactivé!")
     else
         -- Argument invalide
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.error,
-            args = {messages.prefix, "Usage: /randomspawn [on/off]"}
-        })
+        TriggerEvent("chatMessage", messages.prefix, messages.colors.error, "Usage: /randomspawn [on/off]")
     end
 end)
 
@@ -556,30 +503,12 @@ end)
 RegisterCommand("randomspawnstats", function(source, args, rawCommand)
     if #args < 1 then
         -- Affiche les paramètres actuels
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.info,
-            args = {messages.prefix, "Paramètres du spawn aléatoire:"}
-        })
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.info,
-            args = {"", "spawnInterval: " .. randomSpawn.spawnInterval .. "ms"}
-        })
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.info,
-            args = {"", "minDistance: " .. randomSpawn.minDistance .. "m"}
-        })
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.info,
-            args = {"", "maxDistance: " .. randomSpawn.maxDistance .. "m"}
-        })
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.info,
-            args = {"", "maxRandomZombies: " .. randomSpawn.maxRandomZombies}
-        })
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.info,
-            args = {"", "spawnChance: " .. (randomSpawn.spawnChance * 100) .. "%"}
-        })
+        TriggerEvent("chatMessage", messages.prefix, messages.colors.info, "Paramètres du spawn aléatoire:")
+        TriggerEvent("chatMessage", "", messages.colors.info, "spawnInterval: " .. randomSpawn.spawnInterval .. "ms")
+        TriggerEvent("chatMessage", "", messages.colors.info, "minDistance: " .. randomSpawn.minDistance .. "m")
+        TriggerEvent("chatMessage", "", messages.colors.info, "maxDistance: " .. randomSpawn.maxDistance .. "m")
+        TriggerEvent("chatMessage", "", messages.colors.info, "maxRandomZombies: " .. randomSpawn.maxRandomZombies)
+        TriggerEvent("chatMessage", "", messages.colors.info, "spawnChance: " .. (randomSpawn.spawnChance * 100) .. "%")
         return
     end
     
@@ -587,49 +516,28 @@ RegisterCommand("randomspawnstats", function(source, args, rawCommand)
     local value = tonumber(args[2])
     
     if not value then
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.error,
-            args = {messages.prefix, "Usage: /randomspawnstats [param] [value]"}
-        })
+        TriggerEvent("chatMessage", messages.prefix, messages.colors.error, "Usage: /randomspawnstats [param] [value]")
         return
     end
     
     -- Modifie le paramètre demandé
     if param == "spawninterval" then
         randomSpawn.spawnInterval = value
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.success,
-            args = {messages.prefix, "spawnInterval mis à jour à " .. value .. "ms"}
-        })
+        TriggerEvent("chatMessage", messages.prefix, messages.colors.success, "spawnInterval mis à jour à " .. value .. "ms")
     elseif param == "mindistance" then
         randomSpawn.minDistance = value
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.success,
-            args = {messages.prefix, "minDistance mis à jour à " .. value .. "m"}
-        })
+        TriggerEvent("chatMessage", messages.prefix, messages.colors.success, "minDistance mis à jour à " .. value .. "m")
     elseif param == "maxdistance" then
         randomSpawn.maxDistance = value
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.success,
-            args = {messages.prefix, "maxDistance mis à jour à " .. value .. "m"}
-        })
+        TriggerEvent("chatMessage", messages.prefix, messages.colors.success, "maxDistance mis à jour à " .. value .. "m")
     elseif param == "maxrandomzombies" then
         randomSpawn.maxRandomZombies = value
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.success,
-            args = {messages.prefix, "maxRandomZombies mis à jour à " .. value}
-        })
+        TriggerEvent("chatMessage", messages.prefix, messages.colors.success, "maxRandomZombies mis à jour à " .. value)
     elseif param == "spawnchance" then
         randomSpawn.spawnChance = math.min(value / 100, 1.0)
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.success,
-            args = {messages.prefix, "spawnChance mis à jour à " .. (randomSpawn.spawnChance * 100) .. "%"}
-        })
+        TriggerEvent("chatMessage", messages.prefix, messages.colors.success, "spawnChance mis à jour à " .. (randomSpawn.spawnChance * 100) .. "%")
     else
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.error,
-            args = {messages.prefix, "Paramètre invalide. Disponibles: spawnInterval, minDistance, maxDistance, maxRandomZombies, spawnChance"}
-        })
+        TriggerEvent("chatMessage", messages.prefix, messages.colors.error, "Paramètre invalide. Disponibles: spawnInterval, minDistance, maxDistance, maxRandomZombies, spawnChance")
     end
 end)
 
@@ -652,22 +560,10 @@ RegisterCommand("zombiestatus", function(source, args, rawCommand)
     local manualZombies = totalZombies - randomZombies
     
     -- Affiche les statistiques
-    TriggerEvent("chat:addMessage", {
-        color = messages.colors.info,
-        args = {messages.prefix, "Statistiques des zombies:"}
-    })
-    TriggerEvent("chat:addMessage", {
-        color = messages.colors.info,
-        args = {"", "Total: " .. totalZombies .. "/" .. zombieConfig.maxZombies}
-    })
-    TriggerEvent("chat:addMessage", {
-        color = messages.colors.info,
-        args = {"", "Manuels: " .. manualZombies}
-    })
-    TriggerEvent("chat:addMessage", {
-        color = messages.colors.info,
-        args = {"", "Aléatoires: " .. randomZombies .. "/" .. randomSpawn.maxRandomZombies}
-    })
+    TriggerEvent("chatMessage", messages.prefix, messages.colors.info, "Statistiques des zombies:")
+    TriggerEvent("chatMessage", "", messages.colors.info, "Total: " .. totalZombies .. "/" .. zombieConfig.maxZombies)
+    TriggerEvent("chatMessage", "", messages.colors.info, "Manuels: " .. manualZombies)
+    TriggerEvent("chatMessage", "", messages.colors.info, "Aléatoires: " .. randomZombies .. "/" .. randomSpawn.maxRandomZombies)
 end)
 
 -- ============================================================================
@@ -684,10 +580,7 @@ RegisterCommand("zombiesradius", function(source, args, rawCommand)
     local count = GetRandomZombieCountInRadius(radius)
     
     -- Affiche le résultat
-    TriggerEvent("chat:addMessage", {
-        color = messages.colors.info,
-        args = {messages.prefix, "Zombies aléatoires dans un rayon de " .. radius .. "m: " .. count}
-    })
+    TriggerEvent("chatMessage", messages.prefix, messages.colors.info, "Zombies aléatoires dans un rayon de " .. radius .. "m: " .. count)
 end)
 
 -- ============================================================================
@@ -704,25 +597,16 @@ RegisterCommand("zombieslist", function(source, args, rawCommand)
     local zombies = GetRandomZombiesInRadius(radius)
     
     -- Affiche le titre
-    TriggerEvent("chat:addMessage", {
-        color = messages.colors.info,
-        args = {messages.prefix, "Zombies aléatoires dans un rayon de " .. radius .. "m:"}
-    })
+    TriggerEvent("chatMessage", messages.prefix, messages.colors.info, "Zombies aléatoires dans un rayon de " .. radius .. "m:")
     
     -- Affiche chaque zombie avec sa distance
     if #zombies == 0 then
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.info,
-            args = {"", "Aucun zombie trouvé"}
-        })
+        TriggerEvent("chatMessage", "", messages.colors.info, "Aucun zombie trouvé")
     else
         for i, zombie in ipairs(zombies) do
             -- Arrondit la distance à 2 décimales
             local distance = string.format("%.2f", zombie.distance)
-            TriggerEvent("chat:addMessage", {
-                color = messages.colors.info,
-                args = {"", i .. ". Distance: " .. distance .. "m"}
-            })
+            TriggerEvent("chatMessage", "", messages.colors.info, i .. ". Distance: " .. distance .. "m")
         end
     end
 end)
