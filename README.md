@@ -1,6 +1,6 @@
 # Zombie Spawner RedM
 
-**Système de spawn de zombies avec synchronisation multi-joueurs pour Red Dead Redemption 2**
+**Système de spawn de zombies avec synchronisation multi-joueurs pour RedM**
 
 Un script complet pour créer et gérer des zombies dans votre serveur RedM avec une architecture client-serveur optimisée pour le multijoueur.
 
