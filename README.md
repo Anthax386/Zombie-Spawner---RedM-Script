@@ -347,7 +347,7 @@ Zombie-Spawner/
 
 ### Version et Changelog 
 
-**Version Actuelle :** 1.0.0
+**Version Actuelle :** 0.0.1
 - ✅ Architecture client-serveur complète
 - ✅ Synchronisation multi-joueurs
 - ✅ Système de zones configurable
