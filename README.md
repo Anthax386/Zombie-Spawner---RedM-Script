@@ -1,10 +1,34 @@
 # Zombie Spawner RedM
 
-**Système de spawn de zombies avec synchronisation multi-joueurs pour RedM**
+**Système de spawn de zombies avec synchronisation multi-joueurs pour Red Dead Redemption 2**
 
 Un script complet pour créer et gérer des zombies dans votre serveur RedM avec une architecture client-serveur optimisée pour le multijoueur.
 
-## Fonctionnalités
+## 📋 Table des Matières
+
+- [🔧 Fonctionnalités](#-fonctionnalités)
+- [⚡ Prérequis Techniques](#-prérequis-techniques)
+- [🚀 Installation Rapide](#-installation-rapide)
+- [📦 Installation Détaillée](#-installation-détaillée)
+  - [Installation Automatique](#1-installation)
+  - [Configuration de Base](#2-configuration-de-base)
+  - [Configuration Avancée](#3-configuration-avancée)
+- [📋 Commandes Disponibles](#-commandes-disponibles)
+- [✅ Vérification de l'Installation](#-vérification-de-linstallation)
+- [⚙️ Configuration Détaillée](#-configuration-détaillée)
+  - [Messages](#messages)
+  - [Modèles de Zombies](#modèles-de-zombies)
+  - [Statistiques des Zombies](#statistiques-des-zombies)
+  - [Comportement au Combat](#comportement-au-combat)
+  - [Relations](#relations)
+  - [Zones de Spawn](#zones-de-spawn)
+  - [Paramètres des Zones](#paramètres-des-zones)
+- [🏗️ Architecture Client-Serveur](#️-architecture-client-serveur)
+- [📁 Structure du Script](#-structure-du-script)
+- [🆘 Support et Dépannage](#-support-et-dépannage)
+- [📋 Informations Supplémentaires](#-informations-supplémentaires)
+
+## 🔧 Fonctionnalités {#-fonctionnalités}
 
 - ✅ **Synchronisation multi-joueurs** complète
 - ✅ **Système de zones** configurables
@@ -14,23 +38,23 @@ Un script complet pour créer et gérer des zombies dans votre serveur RedM avec
 - ✅ **Nettoyage automatique** des entités
 - ✅ **Optimisé performance** avec variables locales
 
-## Prérequis Techniques
+## ⚡ Prérequis Techniques {#-prérequis-techniques}
 
 - **RedM Server** build 2802 ou supérieur
 - **FiveM/RedM Framework** correctement configuré
 - **Accès administrateur** au serveur de jeu
 - **Connaissance de base** de la configuration Lua (optionnel)
 
-## Installation Rapide
+## 🚀  Installation Rapide {#-installation-rapide}
 
 1. **Placez** le dossier dans `resources/`
 2. **Ajoutez** `ensure Zombie-Spawner` dans `server.cfg`
 3. **Redémarrez** votre serveur
 4. **Testez** avec `/zombiecount`
 
-## Installation Détaillée
+## 📦 Installation Détaillée {#-installation-détaillée}
 
-### 1. Installation
+### 1. Installation {#1-installation}
 
 1. **Téléchargez** le dossier `Zombie-Spawner`
 2. **Placez-le** dans votre répertoire `resources/[nom_de_votre_serveur]/`
@@ -40,9 +64,9 @@ Un script complet pour créer et gérer des zombies dans votre serveur RedM avec
    ```
 4. **Redémarrez** votre serveur RedM
 
-### 2. Configuration de Base
+### 2. Configuration de Base {#2-configuration-de-base}
 
-#### Configuration des Zones
+#### Configuration des Zones {#configuration-des-zones}
 Modifiez `config.lua` pour définir vos zones de spawn :
 
 ```lua
@@ -68,7 +92,7 @@ add_ace group.admin command.zombiecount allow
 add_ace group.moderator command.zombiecount allow
 ```
 
-### 3. Configuration Avancée
+### 3. Configuration Avancée {#3-configuration-avancée} 
 
 #### A. Statistiques des Zombies
 ```lua
@@ -99,7 +123,7 @@ Config.zoneSettings = {
 }
 ```
 
-## Commandes Disponibles
+## 📋 Commandes Disponibles {#-commandes-disponibles}
 
 | Commande | Description | Permission | Exemple |
 |----------|-------------|------------|---------|
@@ -107,7 +131,7 @@ Config.zoneSettings = {
 | `/clearzombies` | Supprime tous les zombies | Admin | `/clearzombies` |
 | `/spawnzombies <zone>` | Spawn un zombie dans une zone | Tous | `/spawnzombies 1` |
 
-## Vérification de l'Installation
+## ✅ Vérification de l'Installation {#-vérification-de-linstallation}
 
 1. **Démarrez** votre serveur RedM
 2. **Connectez-vous** au serveur
@@ -123,9 +147,9 @@ Config.zoneSettings = {
    Commandes zombies chargées avec succès !
    ```
 
-## Configuration Détaillée
+## ⚙️ Configuration Détaillée {#-configuration-détaillée}
 
-### Messages
+### Messages {#messages}
 
 Ces paramètres définissent les couleurs et le préfixe des messages
 
@@ -144,7 +168,7 @@ Config.messages = {
 }
 ```
 
-### Modèles de Zombies
+### Modèles de Zombies {#modèles-de-zombies} 
 
 Cette table contient tous les modèles de zombies que le script peut utiliser.
 Le script en choisira un au hasard à chaque spawn.
@@ -163,7 +187,7 @@ Config.zombieModels = {
 }
 ```
 
-### Statistiques des Zombies
+### Statistiques des Zombies {#statistiques-des-zombies}
 
 Ces paramètres définissent les statistiques par défaut de tous les zombies.
 
@@ -182,7 +206,7 @@ Config.zombieStats = {
 }
 ```
 
-### Comportement au Combat
+### Comportement au Combat {#comportement-au-combat}
 
 Ces paramètres définissent le comportement des zombies au combat.
 
@@ -203,7 +227,7 @@ Config.combatBehavior = {
 }
 ```
 
-### Relations
+### Relations {#relations}
 
 Ces paramètres définissent comment les zombies réagissent aux autres entités.
 
@@ -226,7 +250,7 @@ Config.relationships = {
 }
 ```
 
-### Zones de Spawn
+### Zones de Spawn {#zones-de-spawn}
 
 Ces paramètres définissent les zones où les zombies peuvent spawner.
 
@@ -250,26 +274,47 @@ Config.spawnZones = {
 }
 ```
 
-### Paramètres des Zones
+### Statistiques des Zombies {#statistiques-des-zombies}
 
-Ces paramètres contrôlent le comportement général du système de zones.
+Ces paramètres définissent les statistiques par défaut de tous les zombies.
 
 **PARAMÈTRES:**
-- `spawnInterval`: Intervalle par défaut entre chaque spawn en millisecondes
-- `cleanupDistance`: Distance de nettoyage automatique
-- `showMarkers`: Affiche les marqueurs des zones sur la map
-- `markerColor`: Couleur des marqueurs (R, G, B, A)
+- `health`: Points de vie du zombie (recommandé: 100-500)
+- `accuracy`: Précision du tir (0.0 = jamais, 1.0 = toujours)
+- `speed`: Vitesse de déplacement (1.0 = normal, 0.5 = lent, 2.0 = rapide)
+- `aggression`: Agressivité (0.0 = passif, 1.0 = très agressif)
 
 ```lua
-Config.zoneSettings = {
-    spawnInterval = 30000,
-    cleanupDistance = 200.0,
-    showMarkers = false,
-    markerColor = {255, 0, 0, 100}
+Config.zombieStats = {
+    health = 100.0,
+    accuracy = 0.3,
+    speed = 0.7,
+    aggression = 0.8
 }
 ```
 
-## Architecture Client-Serveur
+### Comportement au Combat {#comportement-au-combat}
+
+Ces paramètres définissent le comportement des zombies au combat.
+
+**PARAMÈTRES:**
+- `combatAbility`: Niveau de compétence au combat (0-2)
+- `combatRange`: Distance de combat préférée (0-2)
+- `combatMovement`: Style de mouvement au combat (0-3)
+- `alwaysFight`: Attribut RedM (46)
+- `useMeleeWeapons`: Attribut RedM (5)
+
+```lua
+Config.combatBehavior = {
+    combatAbility = 2,
+    combatRange = 0,
+    combatMovement = 2,
+    alwaysFight = 46,
+    useMeleeWeapons = 5
+}
+```
+
+## 🏗️ Architecture Client-Serveur {#-architecture-client-serveur}
 
 Le script utilise une architecture **client-serveur** pour une synchronisation optimale :
 
@@ -291,7 +336,7 @@ Le script utilise une architecture **client-serveur** pour une synchronisation o
 3. **Synchronisation** → L'entité est créée pour tous les clients
 4. **Feedback** → Le serveur confirme l'action au client demandeur
 
-## Structure du Script
+## 📁 Structure du Script {#-structure-du-script}
 
 ```
 Zombie-Spawner/
@@ -304,7 +349,7 @@ Zombie-Spawner/
 └── fxmanifest.lua          # Manifest du script
 ```
 
-## Support et Dépannage
+## 🆘 Support et Dépannage {#-support-et-dépannage}
 
 ### Problèmes Courants
 
@@ -325,22 +370,22 @@ Zombie-Spawner/
 - Vérifiez la connexion réseau
 - Testez avec un autre joueur sur le serveur
 
-### Logs et Debug
+### Logs et Debug   
 
 - **Console serveur** : Messages de spawn/nettoyage
 - **Console client** : Messages de configuration
 - **Chat du jeu** : Feedback des commandes
 
-### Mise à Jour
+### Mise à Jour 
 
 1. **Sauvegardez** votre configuration (`config.lua`)
 2. **Remplacez** les fichiers du script
 3. **Redémarrez** le serveur
 4. **Vérifiez** que tout fonctionne
 
-## Informations Supplémentaires
+## 📋 Informations Supplémentaires {#-informations-supplémentaires}
 
-### Version et Changelog
+### Version et Changelog 
 
 **Version Actuelle :** 1.0.0
 - ✅ Architecture client-serveur complète
