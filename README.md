@@ -30,7 +30,7 @@ Un script complet pour créer et gérer des zombies dans votre serveur RedM avec
 
 ## Installation Détaillée
 
-### 1. Installation Automatique
+### 1. Installation
 
 1. **Téléchargez** le dossier `Zombie-Spawner`
 2. **Placez-le** dans votre répertoire `resources/[nom_de_votre_serveur]/`
