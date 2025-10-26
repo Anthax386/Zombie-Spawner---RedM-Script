@@ -1,6 +1,6 @@
-# 🧟 Script de Spawn de Zombies pour RedM
+# 🧟 Zombie Spawner V2 - Système de Zones pour RedM
 
-Un script LUA complet pour Red Dead Redemption 2 (RedM) qui permet de créer et gérer des zombies avec des statistiques personnalisables.
+Un script LUA complet pour Red Dead Redemption 2 (RedM) qui permet de créer et gérer des zombies dans des zones prédéfinies avec des statistiques personnalisables. Les zombies spawnent dans des zones statiques au lieu de suivre le joueur, comme les animaux du jeu.
 
 ---
 
@@ -50,97 +50,65 @@ Redémarrez votre serveur et le script sera actif!
 
 ## 🎮 Commandes
 
-### Spawner des Zombies
-```
-/spawnzombie [nombre]
-```
-**Exemple:**
-- `/spawnzombie` - Spawn 1 zombie
-- `/spawnzombie 5` - Spawn 5 zombies
-- `/spawnzombie 10` - Spawn 10 zombies
+### Gestion des Zones
 
-### Activer/Désactiver le Spawn Aléatoire
+**Afficher toutes les zones:**
 ```
-/randomspawn [on/off]
+/listzones
+```
+Affiche la liste de toutes les zones configurées avec leur statut.
+
+**Activer/Désactiver une zone:**
+```
+/togglezone [zoneIndex]
+```
+**Exemple:** `/togglezone 1` - Bascule la zone 1
+
+**Afficher les marqueurs des zones:**
+```
+/togglemarkers
+```
+Active/désactive l'affichage des marqueurs visuels des zones (utile pour le debug).
+
+### Spawn de Zombies
+
+**Spawner des zombies dans une zone:**
+```
+/spawnzombie [nombre] [zoneIndex]
 ```
 **Exemples:**
-- `/randomspawn on` - Active le spawn aléatoire de zombies sur la map
-- `/randomspawn off` - Désactive le spawn aléatoire
-- `/randomspawn` - Affiche l'état actuel
+- `/spawnzombie 5 1` - Spawn 5 zombies dans la zone 1
+- `/spawnzombie 10 2` - Spawn 10 zombies dans la zone 2
+- `/spawnzombie 3` - Spawn 3 zombies dans la zone 1 (par défaut)
 
-### Modifier les Paramètres du Spawn Aléatoire
-```
-/randomspawnstats [paramètre] [valeur]
-```
-**Paramètres disponibles:**
-- `spawnInterval` - Intervalle entre chaque spawn en millisecondes
-- `minDistance` - Distance minimale du joueur en mètres
-- `maxDistance` - Distance maximale du joueur en mètres
-- `maxRandomZombies` - Nombre maximum de zombies aléatoires
-- `spawnChance` - Pourcentage de chance de spawn (0-100)
+### Configuration
 
-**Exemples:**
-```
-/randomspawnstats maxRandomZombies 10    -- Permet jusqu'à 10 zombies aléatoires
-/randomspawnstats spawnInterval 5000     -- Spawn toutes les 5 secondes
-/randomspawnstats minDistance 100        -- Minimum 100 mètres du joueur
-/randomspawnstats spawnChance 80         -- 80% de chance de spawn
-```
-
-### Afficher le Statut des Zombies
-```
-/zombiestatus
-```
-**Affiche:**
-- Nombre total de zombies vivants
-- Nombre de zombies spawnés manuellement
-- Nombre de zombies spawnés aléatoirement
-
-### Vérifier les Zombies Aléatoires dans un Rayon
-```
-/zombiesradius [rayon]
-```
-**Description:** Compte le nombre de zombies aléatoires dans un rayon autour du joueur
-
-**Exemples:**
-- `/zombiesradius` - Affiche les zombies dans un rayon de 100m (par défaut)
-- `/zombiesradius 150` - Affiche les zombies dans un rayon de 150m
-- `/zombiesradius 50` - Affiche les zombies dans un rayon de 50m
-
-### Afficher la Liste des Zombies Proches
-```
-/zombieslist [rayon]
-```
-**Description:** Affiche la liste détaillée des zombies aléatoires avec leurs distances
-
-**Exemples:**
-- `/zombieslist` - Liste les zombies dans un rayon de 100m (par défaut)
-- `/zombieslist 200` - Liste les zombies dans un rayon de 200m
-- `/zombieslist 75` - Liste les zombies dans un rayon de 75m
-
-**Résultat:** Affiche chaque zombie avec sa distance exacte (triés du plus proche au plus loin)
-
-### Modifier les Statistiques des Zombies
+**Modifier les statistiques des zombies:**
 ```
 /setzombiestats [stat] [valeur]
 ```
-
-**Statistiques disponibles:**
-- `health` - Points de vie (exemple: 200)
-- `damageModifier` - Multiplicateur de dégâts (exemple: 1.5)
-- `accuracy` - Précision du tir (0.0 à 1.0, exemple: 0.5)
-- `speed` - Vitesse de déplacement (exemple: 1.0)
-- `aggression` - Agressivité (0.0 à 1.0, exemple: 0.8)
-- `spawnRadius` - Distance de spawn autour du joueur en mètres (exemple: 50)
-- `maxZombies` - Nombre maximum de zombies simultanés (exemple: 10)
-
 **Exemples:**
 ```
-/setzombiestats health 300          -- Augmente la santé à 300
-/setzombiestats speed 1.5           -- Augmente la vitesse de 50%
-/setzombiestats accuracy 0.8        -- Augmente la précision à 80%
-/setzombiestats maxZombies 20       -- Permet jusqu'à 20 zombies
+/setzombiestats health 300      -- Augmente la santé à 300
+/setzombiestats speed 1.5       -- Augmente la vitesse de 50%
+/setzombiestats accuracy 0.8    -- Augmente la précision à 80%
 ```
+
+**Afficher le statut des zombies:**
+```
+/zombiestatus
+```
+Affiche le nombre de zombies par zone.
+
+### Outils de Configuration
+
+**Ajouter un marqueur à la position actuelle:**
+```
+/addzonemarker [nom] [radius] [maxZombies]
+```
+**Exemple:** `/addzonemarker "Forêt Sombre" 100 5`
+
+Affiche les coordonnées au format prêt à copier dans `config.lua`.
 
 ---
 
@@ -156,84 +124,66 @@ Le script utilise un fichier `config.lua` séparé pour gérer tous les paramèt
 - Organisation claire et centralisée
 - Facile à sauvegarder et partager
 
-### Configuration par Défaut
+### Configuration des Zones
 
-Le script utilise ces paramètres par défaut (définis dans `config.lua`):
+Les zones définissent où les zombies peuvent spawner. Chaque zone a ses propres paramètres:
 
 ```lua
-local zombieConfig = {
-    health = 200.0,          -- Points de vie du zombie
-    damageModifier = 1.5,    -- 50% plus de dégâts
-    accuracy = 0.3,          -- 30% de précision
-    speed = 1.0,             -- Vitesse normale
-    aggression = 0.8,        -- Très agressif
-    spawnRadius = 50.0,      -- Spawn dans un rayon de 50 mètres
-    maxZombies = 10          -- Maximum 10 zombies à la fois
+Config.spawnZones = {
+    {
+        name = "Zone Test 1",
+        coords = vector3(0.0, 0.0, 0.0),
+        radius = 100.0,
+        maxZombies = 5,
+        enabled = true
+    },
+    {
+        name = "Zone Test 2",
+        coords = vector3(500.0, 500.0, 0.0),
+        radius = 150.0,
+        maxZombies = 8,
+        enabled = true
+    }
 }
 ```
 
-### Modifier la Configuration par Défaut
+**Paramètres d'une zone:**
+- `name` - Nom descriptif de la zone
+- `coords` - Coordonnées du centre (vector3)
+- `radius` - Rayon de spawn en mètres
+- `maxZombies` - Nombre maximum de zombies dans cette zone
+- `enabled` - Active/désactive la zone
+- `spawnInterval` - (Optionnel) Intervalle de spawn personnalisé
 
-Ouvrez le fichier `config.lua` et modifiez les sections souhaitées:
+### Configuration Globale des Zones
 
-**Pour modifier les statistiques des zombies:**
+```lua
+Config.zoneSettings = {
+    spawnInterval = 5000,        -- Intervalle par défaut (5 secondes)
+    cleanupDistance = 200.0,     -- Distance avant suppression d'un zombie
+    showMarkers = false,         -- Afficher les marqueurs des zones
+    markerColor = {255, 0, 0, 100}  -- Couleur des marqueurs (R, G, B, A)
+}
+```
+
+### Modifier les Statistiques des Zombies
 
 ```lua
 Config.zombieStats = {
-    health = 300.0,          -- Augmentez la santé
-    damageModifier = 2.0,    -- Augmentez les dégâts
-    accuracy = 0.7,          -- Augmentez la précision
-    speed = 1.5,             -- Augmentez la vitesse
-    aggression = 1.0,        -- Agressivité maximale
-    spawnRadius = 100.0,     -- Spawn plus loin
-    maxZombies = 20          -- Plus de zombies
+    health = 200.0,          -- Points de vie
+    damageModifier = 1.5,    -- Multiplicateur de dégâts
+    accuracy = 0.3,          -- Précision du tir (0.0 à 1.0)
+    speed = 1.0,             -- Vitesse de déplacement
+    aggression = 0.8         -- Agressivité (0.0 à 1.0)
 }
 ```
 
-**Pour modifier les modèles de zombies:**
+### Modifier les Modèles de Zombies
 
 ```lua
 Config.zombieModels = {
-    "A_M_M_UniCorpse_01",
-    "A_M_M_UniCorpse_02",
     "A_C_Bear_01",
-    "mon_modele_personnalise"
-}
-```
-
-**Pour modifier le comportement au combat:**
-
-```lua
-Config.combatBehavior = {
-    combatAbility = 2,       -- 0=Novice, 1=Intermédiaire, 2=Expert
-    combatRange = 2,         -- 0=Proche, 1=Moyen, 2=Loin
-    combatMovement = 3       -- 0=Stationnaire, 1=Défensif, 2=Offensif, 3=Flanking
-}
-```
-
-**Pour modifier les relations avec les entités:**
-
-```lua
-Config.relationships = {
-    playerRelationship = 5,      -- 5 = Haine (attaquent le joueur)
-    civilianRelationship = 5,    -- 5 = Haine (attaquent les civils)
-    gangRelationship = 5,        -- 5 = Haine (attaquent les gangs)
-    animalRelationship = 5,      -- 5 = Haine (attaquent les animaux)
-    wildAnimalRelationship = 5   -- 5 = Haine (attaquent les animaux sauvages)
-}
-```
-
-**Pour configurer le spawn aléatoire sur la map:**
-
-```lua
-Config.randomSpawn = {
-    enabled = false,             -- Désactivé par défaut (mettez à true pour activer)
-    spawnInterval = 10000,       -- Spawn toutes les 10 secondes
-    spawnRadius = 200.0,         -- Rayon de spawn de 200 mètres
-    minDistance = 50.0,          -- Minimum 50 mètres du joueur
-    maxDistance = 200.0,         -- Maximum 200 mètres du joueur
-    maxRandomZombies = 5,        -- Maximum 5 zombies aléatoires
-    spawnChance = 0.6            -- 60% de chance de spawn à chaque intervalle
+    "amsp_robsdgunsmith_males_01"
 }
 ```
 
@@ -300,58 +250,55 @@ Puis redémarrez la ressource avec `/restart zombie_spawner`
 
 ## 🔧 Fonctionnement Technique
 
-### Comment Fonctionne la Table des Modèles
+### Système de Zones
 
-La table `zombieModels` est une liste de modèles:
+Les zombies spawnent dans des zones prédéfinies au lieu de suivre le joueur:
 
-```lua
-local zombieModels = {
-    "Modèle 1",  -- Index 1
-    "Modèle 2",  -- Index 2
-    "Modèle 3",  -- Index 3
-    "Modèle 4"   -- Index 4
-}
-```
-
-**Lors du spawn:**
-1. `math.random(#zombieModels)` génère un nombre aléatoire (1, 2, 3 ou 4)
-2. `zombieModels[nombre]` récupère le modèle à cet index
-3. Le zombie est créé avec ce modèle
-
-**Exemple:**
-```
-Si math.random(4) = 2 → zombieModels[2] = "Modèle 2"
-```
+1. **Définition** - Chaque zone est définie par des coordonnées (X, Y, Z) et un rayon
+2. **Spawn** - Les zombies spawnent aléatoirement dans le rayon de la zone
+3. **Limite** - Chaque zone a un nombre maximum de zombies simultanés
+4. **Nettoyage** - Les zombies qui s'éloignent trop sont supprimés
 
 ### Fonctions Principales
 
-#### `SpawnZombie()`
-Crée un zombie à une position aléatoire autour du joueur.
+#### `SpawnZombieInZone(zone, zoneIndex)`
+Crée un zombie à une position aléatoire dans une zone donnée.
 
 **Ce qu'elle fait:**
-1. Récupère la position du joueur
-2. Choisit un modèle aléatoire
-3. Charge le modèle en mémoire
-4. Crée le zombie
-5. Configure ses propriétés (santé, combat, relations)
-6. L'ajoute à la liste de suivi
+1. Récupère les coordonnées du centre de la zone
+2. Génère une position aléatoire dans le rayon
+3. Choisit un modèle aléatoire
+4. Charge le modèle en mémoire
+5. Crée le zombie
+6. Configure ses propriétés (santé, combat, relations)
+7. L'ajoute à la liste de suivi avec la zone associée
 
 #### `CleanupZombies()`
-Nettoie les zombies morts de la mémoire.
+Supprime les zombies morts ou éloignés de leur zone.
 
 **Ce qu'elle fait:**
 1. Parcourt la liste des zombies
 2. Vérifie si chaque zombie existe et est vivant
-3. Supprime les zombies morts
-4. Libère la mémoire
+3. Vérifie si le zombie s'est éloigné de sa zone
+4. Supprime les zombies morts ou éloignés
+5. Libère la mémoire
+
+#### `GetZombieCountInZone(zoneIndex)`
+Compte le nombre de zombies vivants dans une zone donnée.
+
+#### `DrawZoneMarkers()`
+Affiche les marqueurs visuels des zones sur la map (si activé).
 
 #### Thread Principal
 Boucle qui s'exécute toutes les 5 secondes.
 
 **Ce qu'il fait:**
-1. Nettoie les zombies morts
-2. Vérifie si on peut spawner plus de zombies
-3. Spawn un nouveau zombie si nécessaire
+1. Nettoie les zombies morts ou éloignés
+2. Affiche les marqueurs des zones
+3. Pour chaque zone activée:
+   - Vérifie si l'intervalle de spawn est écoulé
+   - Compte les zombies actuels
+   - Spawn un nouveau zombie si la zone n'a pas atteint son maximum
 
 ### Relations avec les Entités
 
@@ -448,39 +395,36 @@ SetPedCombatMovement(zombie, 3)
 
 ---
 
-## 🐛 Corrections et Améliorations
-
-### Bug Fix: Compteur de Zombies Aléatoires
-
-**Problème:** Le compteur de zombies aléatoires augmentait mais ne diminuait jamais, ce qui empêchait le spawn de nouveaux zombies aléatoires après un certain temps.
-
-**Solution:** 
-- Chaque zombie est maintenant marqué avec un flag `isRandom` (true/false)
-- La fonction `GetRandomZombieCount()` compte dynamiquement les zombies aléatoires vivants
-- Le compteur se recalcule automatiquement à chaque vérification
-- Les zombies aléatoires morts sont correctement retirés du comptage
-
-**Résultat:** Le spawn aléatoire fonctionne maintenant correctement indéfiniment!
-
----
-
 ## ❓ FAQ
 
-### Q: Le script ne fonctionne pas, que faire?
-**R:** Vérifiez que:
-1. Le dossier `zombie_spawner` est dans `resources/`
-2. Le `fxmanifest.lua` est correctement configuré
-3. La ligne `ensure zombie_spawner` est dans `server.cfg`
-4. Les modèles utilisés existent dans le jeu
+### Q: Comment configurer les zones?
+**R:** 
+1. Utilisez `/addzonemarker "Nom" radius maxZombies` à la position souhaitée
+2. Copiez les coordonnées affichées dans `Config.spawnZones` du `config.lua`
+3. Redémarrez la ressource avec `/restart zombie_spawner`
 
-### Q: Comment arrêter le spawn automatique de zombies?
-**R:** Modifiez `maxZombies` à 0:
-```
-/setzombiestats maxZombies 0
-```
+### Q: Comment trouver les bonnes coordonnées?
+**R:**
+1. Activez les marqueurs avec `/togglemarkers`
+2. Allez à la position souhaitée
+3. Utilisez `/addzonemarker "Nom" 100 5` pour générer le code
+4. Copiez les coordonnées dans `config.lua`
 
-### Q: Puis-je utiliser des modèles d'autres ressources?
-**R:** Oui! Assurez-vous que la ressource est activée et ajoutez le nom du modèle à la table `zombieModels`.
+### Q: Pourquoi les zombies disparaissent?
+**R:** Les zombies sont supprimés s'ils:
+- Meurent
+- S'éloignent trop de leur zone (> `cleanupDistance`)
+
+Augmentez `cleanupDistance` dans `Config.zoneSettings` si nécessaire.
+
+### Q: Comment arrêter le spawn dans une zone?
+**R:** Utilisez `/togglezone [zoneIndex]` pour désactiver la zone.
+
+### Q: Puis-je avoir des zones avec des paramètres différents?
+**R:** Oui! Chaque zone peut avoir son propre `spawnInterval` et `maxZombies`.
+
+### Q: Quel est le nombre maximum de zombies recommandé par zone?
+**R:** Cela dépend de votre serveur, mais 5-15 par zone est généralement stable.
 
 ### Q: Comment augmenter la difficulté?
 **R:** Utilisez ces commandes:
@@ -488,17 +432,10 @@ SetPedCombatMovement(zombie, 3)
 /setzombiestats health 500
 /setzombiestats accuracy 0.9
 /setzombiestats speed 1.5
-/setzombiestats maxZombies 20
 ```
 
 ### Q: Les zombies ne m'attaquent pas, pourquoi?
 **R:** Vérifiez que les relations sont correctement configurées. Les zombies doivent être dans le groupe "HATES_PLAYER".
-
-### Q: Puis-je modifier les modèles en jeu?
-**R:** Non, vous devez modifier la table `zombieModels` dans le script et redémarrer la ressource.
-
-### Q: Quel est le nombre maximum de zombies recommandé?
-**R:** Cela dépend de votre serveur, mais 10-20 est généralement stable. Plus de zombies = plus de charge serveur.
 
 ---
 
@@ -527,4 +464,4 @@ Ce script est fourni à titre d'exemple. Utilisez-le librement dans vos projets 
 ---
 
 **Dernière mise à jour:** 26 Octobre 2025
-**Version:** 1.0.0
+**Version:** 2.0.0 - Système de Zones

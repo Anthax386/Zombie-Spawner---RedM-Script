@@ -165,6 +165,98 @@ Config.threadSettings = {
 }
 
 -- ============================================================================
+-- CONFIGURATION DES ZONES DE SPAWN (V2)
+-- ============================================================================
+-- EXPLICATION:
+-- Ces paramètres définissent les zones où les zombies peuvent spawner
+-- Les zombies spawnent dans ces zones au lieu de suivre le joueur
+--
+-- STRUCTURE D'UNE ZONE:
+-- {
+--     name = "Nom de la zone",              -- Nom descriptif
+--     coords = vector3(x, y, z),           -- Coordonnées du centre de la zone
+--     radius = 100.0,                      -- Rayon de la zone en mètres
+--     maxZombies = 5,                      -- Nombre maximum de zombies dans cette zone
+--     enabled = true,                      -- Active/désactive la zone
+--     spawnInterval = 5000                 -- Intervalle de spawn en millisecondes (optionnel)
+-- }
+--
+-- PARAMÈTRES:
+-- - name: Nom unique pour identifier la zone
+-- - coords: Position centrale de la zone (vector3)
+-- - radius: Rayon de spawn autour du centre
+-- - maxZombies: Nombre maximum de zombies simultanés dans cette zone
+-- - enabled: true = zone active, false = zone désactivée
+-- - spawnInterval: Intervalle entre chaque spawn (optionnel, utilise la valeur globale par défaut)
+--
+-- COMMENT AJOUTER UNE ZONE:
+-- 1. Ajoutez une nouvelle table à Config.spawnZones
+-- 2. Remplissez les paramètres requis
+-- 3. Utilisez /addzonemarker pour trouver les bonnes coordonnées
+--
+-- EXEMPLE:
+-- {
+--     name = "Forêt Sombre",
+--     coords = vector3(100.0, 200.0, 50.0),
+--     radius = 150.0,
+--     maxZombies = 10,
+--     enabled = true
+-- }
+-- ============================================================================
+
+Config.spawnZones = {
+    -- ZONE EXEMPLE 1 - À REMPLACER PAR VOS COORDONNÉES
+    {
+        name = "Zone Test 1",
+        coords = vector3(0.0, 0.0, 0.0),
+        radius = 100.0,
+        maxZombies = 5,
+        enabled = true
+    },
+    
+    -- ZONE EXEMPLE 2 - À REMPLACER PAR VOS COORDONNÉES
+    {
+        name = "Zone Test 2",
+        coords = vector3(500.0, 500.0, 0.0),
+        radius = 150.0,
+        maxZombies = 8,
+        enabled = true
+    }
+    
+    -- Ajoutez d'autres zones ici
+}
+
+-- ============================================================================
+-- CONFIGURATION GLOBALE DES ZONES
+-- ============================================================================
+-- EXPLICATION:
+-- Ces paramètres contrôlent le comportement général du système de zones
+--
+-- PARAMÈTRES:
+-- - spawnInterval: Intervalle par défaut entre chaque spawn en millisecondes
+--   Défaut: 5000 (5 secondes)
+--   Note: Peut être overridé par zone
+--
+-- - cleanupDistance: Distance à partir de laquelle un zombie est supprimé s'il s'éloigne de sa zone
+--   Défaut: 200.0 (200 mètres)
+--   Note: Évite que les zombies s'échappent trop loin
+--
+-- - showMarkers: Affiche les marqueurs des zones sur la map
+--   Défaut: false
+--   Note: Utile pour le debug et la configuration
+--
+-- - markerColor: Couleur des marqueurs (R, G, B, A)
+--   Défaut: {255, 0, 0, 100} (Rouge semi-transparent)
+-- ============================================================================
+
+Config.zoneSettings = {
+    spawnInterval = 5000,        -- Intervalle par défaut de spawn (5 secondes)
+    cleanupDistance = 200.0,     -- Distance avant suppression d'un zombie éloigné
+    showMarkers = false,         -- Afficher les marqueurs des zones
+    markerColor = {255, 0, 0, 100}  -- Couleur des marqueurs (R, G, B, A)
+}
+
+-- ============================================================================
 -- CONFIGURATION DU SPAWN ALÉATOIRE SUR LA MAP
 -- ============================================================================
 -- EXPLICATION:

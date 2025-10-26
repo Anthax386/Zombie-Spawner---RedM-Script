@@ -10,17 +10,18 @@ require 'config'
 -- Table pour stocker tous les zombies avec leurs informations
 local spawnedZombies = {}
 
--- Copie la configuration dans une variable locale pour utilisation rapide
+-- Copie la configuration dans des variables locales pour utilisation rapide
 local zombieConfig = Config.zombieStats
 local zombieModels = Config.zombieModels
 local combatBehavior = Config.combatBehavior
 local relationships = Config.relationships
 local threadSettings = Config.threadSettings
 local messages = Config.messages
-local randomSpawn = Config.randomSpawn
+local spawnZones = Config.spawnZones
+local zoneSettings = Config.zoneSettings
 
--- Variables pour tracker les zombies aléatoires
-local lastRandomSpawnTime = 0
+-- Variables pour tracker le temps de spawn par zone
+local lastSpawnTimeByZone = {}
 
 -- ============================================================================
 -- FONCTION: ConfigureZombie()
@@ -57,20 +58,35 @@ local function ConfigureZombie(zombie)
 end
 
 -- ============================================================================
--- FONCTION: SpawnZombie()
--- DESCRIPTION: Crée un zombie à une position aléatoire autour du joueur
--- RETOUR: Le handle (identifiant) du zombie créé
+-- FONCTION: SpawnZombieInZone()
+-- DESCRIPTION: Crée un zombie à une position aléatoire dans une zone donnée
+-- PARAMÈTRES:
+--   zone: La table de configuration de la zone
+--   zoneIndex: L'index de la zone dans la table spawnZones
+-- RETOUR: Le handle (identifiant) du zombie créé, ou nil si erreur
 -- ============================================================================
-local function SpawnZombie()
-    -- Récupère le personnage du joueur
-    local playerPed = PlayerPedId()
+local function SpawnZombieInZone(zone, zoneIndex)
+    -- Vérifie que la zone est valide
+    if not zone or not zone.coords then
+        return nil
+    end
     
-    -- Récupère les coordonnées (position X, Y, Z) du joueur
-    local playerCoords = GetEntityCoords(playerPed)
+    -- Récupère les coordonnées du centre de la zone
+    local zoneCoords = zone.coords
     
-    -- Choisit un modèle de zombie au hasard dans la table zombieModels
-    -- math.random(#zombieModels) génère un nombre aléatoire entre 1 et le nombre de modèles
-    -- GetHashKey() convertit le nom du modèle en code numérique (hash)
+    -- Génère une position aléatoire dans le rayon de la zone
+    -- Calcule un angle aléatoire (0 à 360 degrés)
+    local angle = math.rad(math.random(0, 360))
+    
+    -- Calcule une distance aléatoire entre 0 et le rayon de la zone
+    local distance = math.random(0, math.floor(zone.radius * 100)) / 100
+    
+    -- Calcule les coordonnées X et Y en fonction de l'angle et de la distance
+    local spawnX = zoneCoords.x + math.cos(angle) * distance
+    local spawnY = zoneCoords.y + math.sin(angle) * distance
+    local spawnZ = zoneCoords.z
+    
+    -- Choisit un modèle de zombie au hasard
     local modelHash = GetHashKey(zombieModels[math.random(#zombieModels)])
     
     -- ========================================================================
@@ -87,34 +103,20 @@ local function SpawnZombie()
     end
     
     -- ========================================================================
-    -- CALCUL DE LA POSITION DE SPAWN
-    -- ========================================================================
-    -- Crée une position aléatoire autour du joueur
-    -- GetOffsetFromEntityInWorldCoords() calcule une position relative au joueur
-    -- math.random() génère un nombre aléatoire entre 0 et 1
-    -- (math.random() - 0.5) * zombieConfig.spawnRadius * 2 = position aléatoire
-    local spawnCoords = GetOffsetFromEntityInWorldCoords(
-        playerPed,                                                    -- Référence: le joueur
-        (math.random() - 0.5) * zombieConfig.spawnRadius * 2,       -- Décalage X aléatoire
-        (math.random() - 0.5) * zombieConfig.spawnRadius * 2,       -- Décalage Y aléatoire
-        0.0                                                           -- Pas de décalage en Z (hauteur)
-    )
-    
-    -- ========================================================================
     -- CRÉATION DU ZOMBIE
     -- ========================================================================
     -- CreatePed() crée un nouveau personnage (zombie) dans le jeu
     -- Paramètres:
     --   modelHash: le modèle du zombie
-    --   spawnCoords.x, spawnCoords.y, spawnCoords.z: position X, Y, Z
+    --   spawnX, spawnY, spawnZ: position X, Y, Z
     --   0.0: orientation (direction où regarde le zombie)
     --   true: isNetwork (synchronisé sur le réseau)
     --   true: bScriptHostPed (géré par le script)
     local zombie = CreatePed(
         modelHash,
-        spawnCoords.x,
-        spawnCoords.y,
-        spawnCoords.z,
+        spawnX,
+        spawnY,
+        spawnZ,
         0.0,
         true,
         true
@@ -124,81 +126,148 @@ local function SpawnZombie()
     -- CONFIGURATION DU ZOMBIE
     -- ========================================================================
     -- Appelle la fonction ConfigureZombie() pour configurer toutes les propriétés
-    -- Cela évite la duplication de code avec SpawnRandomZombie()
     ConfigureZombie(zombie)
     
     -- ========================================================================
     -- ENREGISTREMENT DU ZOMBIE
     -- ========================================================================
-    
     -- Ajoute le zombie à la table spawnedZombies pour le suivi
-    -- table.insert() ajoute un nouvel élément à la fin d'une table
     -- On crée une table avec:
     --   handle: l'identifiant du zombie
-    --   lastPos: sa dernière position connue
-    --   isRandom: false (ce zombie n'est pas aléatoire)
+    --   zoneIndex: l'index de la zone à laquelle appartient le zombie
+    --   zoneName: le nom de la zone
+    --   spawnCoords: les coordonnées de spawn
     table.insert(spawnedZombies, {
         handle = zombie,
-        lastPos = spawnCoords,
-        isRandom = false
+        zoneIndex = zoneIndex,
+        zoneName = zone.name,
+        spawnCoords = vector3(spawnX, spawnY, spawnZ)
     })
     
     -- ========================================================================
     -- NETTOYAGE DE LA MÉMOIRE
     -- ========================================================================
-    
     -- Indique au jeu que le modèle n'est plus nécessaire
-    -- Cela libère de la mémoire RAM
     SetModelAsNoLongerNeeded(modelHash)
     
-    -- Retourne l'identifiant du zombie créé
     return zombie
 end
 
 -- ============================================================================
 -- FONCTION: CleanupZombies()
--- DESCRIPTION: Supprime les zombies morts de la table de suivi
+-- DESCRIPTION: Supprime les zombies morts ou éloignés de leur zone
 -- UTILITÉ: Évite les fuites mémoire et garde la table à jour
 -- ============================================================================
 local function CleanupZombies()
     -- Boucle à travers la table spawnedZombies en sens inverse
     -- On boucle en sens inverse pour pouvoir supprimer des éléments sans problème
-    -- #spawnedZombies = nombre d'éléments dans la table
     for i = #spawnedZombies, 1, -1 do
         -- Récupère les données du zombie à la position i
-        local zombie = spawnedZombies[i]
+        local zombieData = spawnedZombies[i]
+        local zombie = zombieData.handle
+        
+        -- Flag pour indiquer si le zombie doit être supprimé
+        local shouldRemove = false
         
         -- Vérifie si le zombie n'existe plus OU s'il est mort
-        -- DoesEntityExist() retourne true si l'entité existe
-        -- IsEntityDead() retourne true si l'entité est morte
-        if not DoesEntityExist(zombie.handle) or IsEntityDead(zombie.handle) then
-            
-            -- Si le zombie existe encore, le supprime du jeu
-            if DoesEntityExist(zombie.handle) then
-                DeleteEntity(zombie.handle)
+        if not DoesEntityExist(zombie) or IsEntityDead(zombie) then
+            shouldRemove = true
+        else
+            -- Vérifie si le zombie s'est éloigné trop loin de sa zone
+            local zoneIndex = zombieData.zoneIndex
+            if zoneIndex and spawnZones[zoneIndex] then
+                local zone = spawnZones[zoneIndex]
+                local zombieCoords = GetEntityCoords(zombie)
+                
+                -- Calcule la distance entre le zombie et le centre de la zone
+                local dx = zombieCoords.x - zone.coords.x
+                local dy = zombieCoords.y - zone.coords.y
+                local dz = zombieCoords.z - zone.coords.z
+                local distance = math.sqrt(dx * dx + dy * dy + dz * dz)
+                
+                -- Si le zombie est trop loin, le supprime
+                if distance > zoneSettings.cleanupDistance then
+                    shouldRemove = true
+                end
             end
-            
-            -- Supprime le zombie de la table de suivi
-            -- table.remove() enlève un élément à une position donnée
+        end
+        
+        -- Supprime le zombie si nécessaire
+        if shouldRemove then
+            if DoesEntityExist(zombie) then
+                DeleteEntity(zombie)
+            end
             table.remove(spawnedZombies, i)
         end
     end
 end
 
 -- ============================================================================
--- FONCTION: GetRandomZombieCount()
--- DESCRIPTION: Compte le nombre de zombies aléatoires vivants
--- RETOUR: Le nombre de zombies aléatoires actuellement vivants
+-- FONCTION: GetZombieCountInZone()
+-- DESCRIPTION: Compte le nombre de zombies vivants dans une zone donnée
+-- PARAMÈTRES:
+--   zoneIndex: L'index de la zone dans la table spawnZones
+-- RETOUR: Le nombre de zombies vivants dans la zone
 -- ============================================================================
-local function GetRandomZombieCount()
+local function GetZombieCountInZone(zoneIndex)
     local count = 0
-    for _, zombie in ipairs(spawnedZombies) do
-        -- Vérifie si c'est un zombie aléatoire ET s'il est vivant
-        if zombie.isRandom and DoesEntityExist(zombie.handle) and not IsEntityDead(zombie.handle) then
+    for _, zombieData in ipairs(spawnedZombies) do
+        -- Vérifie si le zombie appartient à cette zone ET s'il est vivant
+        if zombieData.zoneIndex == zoneIndex and DoesEntityExist(zombieData.handle) and not IsEntityDead(zombieData.handle) then
             count = count + 1
         end
     end
     return count
+end
+
+-- ============================================================================
+-- FONCTION: GetTotalZombieCount()
+-- DESCRIPTION: Compte le nombre total de zombies vivants
+-- RETOUR: Le nombre total de zombies vivants
+-- ============================================================================
+local function GetTotalZombieCount()
+    local count = 0
+    for _, zombieData in ipairs(spawnedZombies) do
+        if DoesEntityExist(zombieData.handle) and not IsEntityDead(zombieData.handle) then
+            count = count + 1
+        end
+    end
+    return count
+end
+
+-- ============================================================================
+-- FONCTION: DrawZoneMarkers()
+-- DESCRIPTION: Affiche les marqueurs visuels des zones sur la map
+-- UTILITÉ: Utile pour le debug et la configuration des zones
+-- ============================================================================
+local function DrawZoneMarkers()
+    if not zoneSettings.showMarkers then
+        return
+    end
+    
+    for _, zone in ipairs(spawnZones) do
+        if zone.enabled then
+            -- Récupère les paramètres du marqueur
+            local r, g, b, a = zoneSettings.markerColor[1], zoneSettings.markerColor[2], zoneSettings.markerColor[3], zoneSettings.markerColor[4]
+            
+            -- Affiche un marqueur circulaire au centre de la zone
+            DrawMarker(
+                1,  -- Type de marqueur (1 = cylindre)
+                zone.coords.x,
+                zone.coords.y,
+                zone.coords.z,
+                0.0, 0.0, 0.0,  -- Direction
+                0.0, 0.0, 0.0,  -- Rotation
+                zone.radius * 2, zone.radius * 2, 5.0,  -- Taille
+                r, g, b, a,     -- Couleur
+                false,           -- Bobbing
+                true,            -- FaceCamera
+                2,               -- p19
+                false,           -- RotateToCamera
+                nil, nil, false  -- TextureDict, TextureName, DrawOnEnts
+            )
+        end
+    end
 end
 
 -- ============================================================================
@@ -297,85 +366,51 @@ local function GetRandomZombiesInRadius(radius)
 end
 
 -- ============================================================================
--- FONCTION: SpawnRandomZombie()
--- DESCRIPTION: Crée un zombie à une position aléatoire sur la map
--- RETOUR: Le handle (identifiant) du zombie créé
--- ============================================================================
-local function SpawnRandomZombie()
-    -- Récupère le personnage du joueur
-    local playerPed = PlayerPedId()
-    
-    -- Récupère les coordonnées du joueur
-    local playerCoords = GetEntityCoords(playerPed)
-    
-    -- Génère une position aléatoire dans le rayon défini
-    -- Calcule un angle aléatoire (0 à 360 degrés)
-    local angle = math.rad(math.random(0, 360))
-    
-    -- Calcule une distance aléatoire entre minDistance et maxDistance
-    local distance = math.random(randomSpawn.minDistance * 100, randomSpawn.maxDistance * 100) / 100
-    
-    -- Calcule les coordonnées X et Y en fonction de l'angle et de la distance
-    local spawnX = playerCoords.x + math.cos(angle) * distance
-    local spawnY = playerCoords.y + math.sin(angle) * distance
-    local spawnZ = playerCoords.z
-    
-    -- Choisit un modèle de zombie au hasard
-    local modelHash = GetHashKey(zombieModels[math.random(#zombieModels)])
-    
-    -- Charge le modèle en mémoire
-    RequestModel(modelHash)
-    while not HasModelLoaded(modelHash) do
-        Wait(1)
-    end
-    
-    -- Crée le zombie à la position calculée
-    local zombie = CreatePed(
-        modelHash,
-        spawnX,
-        spawnY,
-        spawnZ,
-        0.0,
-        true,
-        true
-    )
-    
-    -- Configure le zombie avec la fonction réutilisable
-    ConfigureZombie(zombie)
-    
-    -- Ajoute le zombie à la table de suivi
-    -- Marque ce zombie comme aléatoire avec isRandom = true
-    table.insert(spawnedZombies, {
-        handle = zombie,
-        lastPos = vector3(spawnX, spawnY, spawnZ),
-        isRandom = true  -- Ce zombie est aléatoire
-    })
-    
-    -- Libère la mémoire
-    SetModelAsNoLongerNeeded(modelHash)
-    
-    return zombie
-end
-
--- ============================================================================
 -- THREAD PRINCIPAL
--- DESCRIPTION: Boucle qui s'exécute en continu pour gérer les zombies
+-- DESCRIPTION: Boucle qui s'exécute en continu pour gérer les zombies par zone
 -- ============================================================================
 Citizen.CreateThread(function()
+    -- Initialise les temps de spawn pour chaque zone
+    for i, zone in ipairs(spawnZones) do
+        lastSpawnTimeByZone[i] = 0
+    end
+    
     -- Boucle infinie: le thread s'exécute indéfiniment
     while true do
         -- Pause le thread selon l'intervalle défini dans la configuration
-        -- Cela évite de surcharger le processeur
         Citizen.Wait(threadSettings.threadInterval)
         
-        -- Nettoie les zombies morts
+        -- Nettoie les zombies morts ou éloignés
         CleanupZombies()
         
-        -- Vérifie si on peut spawner plus de zombies
-        -- #spawnedZombies = nombre actuel de zombies
-        -- Si ce nombre est inférieur au maximum autorisé, spawn un nouveau zombie
-        if #spawnedZombies < zombieConfig.maxZombies then
-            SpawnZombie()
+        -- Affiche les marqueurs des zones si activé
+        DrawZoneMarkers()
+        
+        -- Parcourt chaque zone de spawn
+        for zoneIndex, zone in ipairs(spawnZones) do
+            -- Vérifie que la zone est activée
+            if zone.enabled then
+                -- Récupère l'intervalle de spawn pour cette zone (ou utilise la valeur par défaut)
+                local spawnInterval = zone.spawnInterval or zoneSettings.spawnInterval
+                
+                -- Récupère le temps actuel en millisecondes
+                local currentTime = GetGameTimer()
+                
+                -- Vérifie si l'intervalle de spawn est écoulé pour cette zone
+                if (currentTime - (lastSpawnTimeByZone[zoneIndex] or 0)) >= spawnInterval then
+                    -- Compte les zombies actuels dans cette zone
+                    local currentZombieCount = GetZombieCountInZone(zoneIndex)
+                    
+                    -- Vérifie si on peut spawner plus de zombies dans cette zone
+                    if currentZombieCount < zone.maxZombies then
+                        -- Spawn un zombie dans la zone
+                        SpawnZombieInZone(zone, zoneIndex)
+                    end
+                    
+                    -- Met à jour le temps du dernier spawn pour cette zone
+                    lastSpawnTimeByZone[zoneIndex] = currentTime
+                end
+            end
         end
         
         -- ====================================================================
@@ -411,26 +446,34 @@ end)
 -- ============================================================================
 -- COMMANDE: /spawnzombie
 -- DESCRIPTION: Permet au joueur de spawner des zombies manuellement
--- UTILISATION: /spawnzombie [nombre]
--- EXEMPLE: /spawnzombie 5 (spawn 5 zombies)
+-- UTILISATION: /spawnzombie [nombre] [zoneIndex]
+-- EXEMPLE: /spawnzombie 5 1 (spawn 5 zombies dans la zone 1)
 -- ============================================================================
 RegisterCommand("spawnzombie", function(source, args, rawCommand)
     -- Récupère le nombre de zombies à spawner depuis les arguments
-    -- tonumber() convertit le texte en nombre
-    -- "or 1" signifie: si aucun argument, spawn 1 zombie par défaut
     local count = tonumber(args[1]) or 1
     
-    -- Boucle pour spawner le nombre de zombies demandé
-    -- for i = 1, count: boucle de 1 jusqu'à count
-    for i = 1, count do
-        SpawnZombie()
+    -- Récupère l'index de la zone (par défaut 1)
+    local zoneIndex = tonumber(args[2]) or 1
+    
+    -- Vérifie que la zone existe
+    if not spawnZones[zoneIndex] then
+        TriggerEvent("chat:addMessage", {
+            color = messages.colors.error,
+            args = {messages.prefix, "Zone " .. zoneIndex .. " n'existe pas"}
+        })
+        return
     end
     
-    -- Affiche un message de confirmation dans le chat du jeu
-    -- Utilise les paramètres de configuration pour les couleurs et le préfixe
+    -- Boucle pour spawner le nombre de zombies demandé
+    for i = 1, count do
+        SpawnZombieInZone(spawnZones[zoneIndex], zoneIndex)
+    end
+    
+    -- Affiche un message de confirmation
     TriggerEvent("chat:addMessage", {
         color = messages.colors.success,
-        args = {messages.prefix, "Spawned " .. count .. " zombie(s)"}
+        args = {messages.prefix, "Spawned " .. count .. " zombie(s) in zone " .. zoneIndex}
     })
 end)
 
@@ -635,38 +678,152 @@ end)
 
 -- ============================================================================
 -- COMMANDE: /zombiestatus
--- DESCRIPTION: Affiche le nombre de zombies actuellement en jeu
+-- DESCRIPTION: Affiche le nombre de zombies actuellement en jeu par zone
 -- UTILISATION: /zombiestatus
 -- ============================================================================
 RegisterCommand("zombiestatus", function(source, args, rawCommand)
     -- Compte le nombre total de zombies vivants
-    local totalZombies = 0
-    local randomZombies = GetRandomZombieCount()
+    local totalZombies = GetTotalZombieCount()
     
-    for _, zombie in ipairs(spawnedZombies) do
-        if DoesEntityExist(zombie.handle) and not IsEntityDead(zombie.handle) then
-            totalZombies = totalZombies + 1
-        end
-    end
-    
-    local manualZombies = totalZombies - randomZombies
-    
-    -- Affiche les statistiques
+    -- Affiche les statistiques globales
     TriggerEvent("chat:addMessage", {
         color = messages.colors.info,
         args = {messages.prefix, "Statistiques des zombies:"}
     })
     TriggerEvent("chat:addMessage", {
         color = messages.colors.info,
-        args = {"", "Total: " .. totalZombies .. "/" .. zombieConfig.maxZombies}
+        args = {"", "Total: " .. totalZombies}
+    })
+    
+    -- Affiche les statistiques par zone
+    for zoneIndex, zone in ipairs(spawnZones) do
+        local zoneCount = GetZombieCountInZone(zoneIndex)
+        local status = zone.enabled and "✓" or "✗"
+        TriggerEvent("chat:addMessage", {
+            color = messages.colors.info,
+            args = {"", status .. " Zone " .. zoneIndex .. " (" .. zone.name .. "): " .. zoneCount .. "/" .. zone.maxZombies}
+        })
+    end
+end)
+
+-- ============================================================================
+-- COMMANDE: /listzones
+-- DESCRIPTION: Affiche la liste de toutes les zones configurées
+-- UTILISATION: /listzones
+-- ============================================================================
+RegisterCommand("listzones", function(source, args, rawCommand)
+    TriggerEvent("chat:addMessage", {
+        color = messages.colors.info,
+        args = {messages.prefix, "Zones configurées:"}
+    })
+    
+    for zoneIndex, zone in ipairs(spawnZones) do
+        local status = zone.enabled and "✓ Activée" or "✗ Désactivée"
+        TriggerEvent("chat:addMessage", {
+            color = messages.colors.info,
+            args = {"", "Zone " .. zoneIndex .. ": " .. zone.name .. " - " .. status .. " (" .. zone.maxZombies .. " max)"}
+        })
+    end
+end)
+
+-- ============================================================================
+-- COMMANDE: /togglezone
+-- DESCRIPTION: Active ou désactive une zone
+-- UTILISATION: /togglezone [zoneIndex]
+-- EXEMPLE: /togglezone 1 (bascule la zone 1)
+-- ============================================================================
+RegisterCommand("togglezone", function(source, args, rawCommand)
+    local zoneIndex = tonumber(args[1])
+    
+    if not zoneIndex or not spawnZones[zoneIndex] then
+        TriggerEvent("chat:addMessage", {
+            color = messages.colors.error,
+            args = {messages.prefix, "Usage: /togglezone [zoneIndex]"}
+        })
+        return
+    end
+    
+    -- Bascule l'état de la zone
+    spawnZones[zoneIndex].enabled = not spawnZones[zoneIndex].enabled
+    
+    local newStatus = spawnZones[zoneIndex].enabled and "activée" or "désactivée"
+    TriggerEvent("chat:addMessage", {
+        color = messages.colors.success,
+        args = {messages.prefix, "Zone " .. zoneIndex .. " (" .. spawnZones[zoneIndex].name .. ") " .. newStatus}
+    })
+end)
+
+-- ============================================================================
+-- COMMANDE: /togglemarkers
+-- DESCRIPTION: Active ou désactive l'affichage des marqueurs des zones
+-- UTILISATION: /togglemarkers
+-- ============================================================================
+RegisterCommand("togglemarkers", function(source, args, rawCommand)
+    zoneSettings.showMarkers = not zoneSettings.showMarkers
+    
+    local status = zoneSettings.showMarkers and "activés" or "désactivés"
+    TriggerEvent("chat:addMessage", {
+        color = messages.colors.success,
+        args = {messages.prefix, "Marqueurs des zones " .. status}
+    })
+end)
+
+-- ============================================================================
+-- COMMANDE: /addzonemarker
+-- DESCRIPTION: Ajoute un marqueur à la position actuelle du joueur
+-- UTILISATION: /addzonemarker [nom] [radius] [maxZombies]
+-- EXEMPLE: /addzonemarker "Forêt Sombre" 100 5
+-- ============================================================================
+RegisterCommand("addzonemarker", function(source, args, rawCommand)
+    if #args < 3 then
+        TriggerEvent("chat:addMessage", {
+            color = messages.colors.error,
+            args = {messages.prefix, "Usage: /addzonemarker [name] [radius] [maxZombies]"}
+        })
+        return
+    end
+    
+    -- Récupère la position du joueur
+    local playerPed = PlayerPedId()
+    local playerCoords = GetEntityCoords(playerPed)
+    
+    -- Récupère les paramètres
+    local zoneName = args[1]
+    local radius = tonumber(args[2]) or 100.0
+    local maxZombies = tonumber(args[3]) or 5
+    
+    -- Affiche les coordonnées pour que le joueur les copie dans config.lua
+    TriggerEvent("chat:addMessage", {
+        color = messages.colors.info,
+        args = {messages.prefix, "Nouvelle zone détectée:"}
     })
     TriggerEvent("chat:addMessage", {
         color = messages.colors.info,
-        args = {"", "Manuels: " .. manualZombies}
+        args = {"", "{"}
     })
     TriggerEvent("chat:addMessage", {
         color = messages.colors.info,
-        args = {"", "Aléatoires: " .. randomZombies .. "/" .. randomSpawn.maxRandomZombies}
+        args = {"", "    name = \"" .. zoneName .. "\","}
+    })
+    TriggerEvent("chat:addMessage", {
+        color = messages.colors.info,
+        args = {"", "    coords = vector3(" .. string.format("%.1f", playerCoords.x) .. ", " .. string.format("%.1f", playerCoords.y) .. ", " .. string.format("%.1f", playerCoords.z) .. "),"}
+    })
+    TriggerEvent("chat:addMessage", {
+        color = messages.colors.info,
+        args = {"", "    radius = " .. radius .. ","}
+    })
+    TriggerEvent("chat:addMessage", {
+        color = messages.colors.info,
+        args = {"", "    maxZombies = " .. maxZombies .. ","}
+    })
+    TriggerEvent("chat:addMessage", {
+        color = messages.colors.info,
+        args = {"", "    enabled = true"}
+    })
+    TriggerEvent("chat:addMessage", {
+        color = messages.colors.info,
+        args = {"", "}"}
     })
 end)
 
