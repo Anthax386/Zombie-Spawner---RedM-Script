@@ -6,16 +6,16 @@ Un script complet pour créer et gérer des zombies dans votre serveur RedM avec
 
 ## 📋 Table des Matières
 
-- [🔧 Fonctionnalités](#fonctionnalités)
-- [⚡ Prérequis Techniques](#prérequis-techniques)
-- [🚀 Installation Rapide](#installation-rapide)
-- [📦 Installation Détaillée](#installation-détaillée)
+- [Fonctionnalités](#fonctionnalités)
+- [Prérequis Techniques](#prérequis-techniques)
+- [Installation Rapide](#installation-rapide)
+- [Installation Détaillée](#installation-détaillée)
   - [Installation](#installation)
   - [Configuration de Base](#configuration-de-base)
   - [Configuration Avancée](#configuration-avancée)
-- [📋 Commandes Disponibles](#commandes-disponibles)
-- [✅ Vérification de l'Installation](#vérification-de-linstallation)
-- [⚙️ Configuration Détaillée](#configuration-détaillée)
+- [Commandes Disponibles](#commandes-disponibles)
+- [Vérification de l'Installation](#vérification-de-linstallation)
+- [Configuration Détaillée](#configuration-détaillée)
   - [Messages](#messages)
   - [Modèles de Zombies](#modèles-de-zombies)
   - [Statistiques des Zombies](#statistiques-des-zombies)
@@ -23,12 +23,12 @@ Un script complet pour créer et gérer des zombies dans votre serveur RedM avec
   - [Relations](#relations)
   - [Zones de Spawn](#zones-de-spawn)
   - [Paramètres des Zones](#paramètres-des-zones)
-- [🏗️ Architecture Client-Serveur](#architecture-client-serveur)
-- [📁 Structure du Script](#structure-du-script)
-- [🆘 Support et Dépannage](#support-et-dépannage)
-- [📋 Informations Supplémentaires](#informations-supplémentaires)
+- [Architecture Client-Serveur](#architecture-client-serveur)
+- [Structure du Script](#structure-du-script)
+- [Support et Dépannage](#support-et-dépannage)
+- [Informations Supplémentaires](#informations-supplémentaires)
 
-## 🔧 Fonctionnalités {#fonctionnalités}
+## Fonctionnalités
 
 - ✅ **Synchronisation multi-joueurs** complète
 - ✅ **Système de zones** configurables
@@ -38,23 +38,23 @@ Un script complet pour créer et gérer des zombies dans votre serveur RedM avec
 - ✅ **Nettoyage automatique** des entités
 - ✅ **Optimisé performance** avec variables locales
 
-## ⚡ Prérequis Techniques {#prérequis-techniques}
+## Prérequis Techniques
 
 - **RedM Server** build 2802 ou supérieur
 - **FiveM/RedM Framework** correctement configuré
 - **Accès administrateur** au serveur de jeu
 - **Connaissance de base** de la configuration Lua (optionnel)
 
-## 🚀  Installation Rapide {#installation-rapide}
+## Installation Rapide
 
 1. **Placez** le dossier dans `resources/`
 2. **Ajoutez** `ensure Zombie-Spawner` dans `server.cfg`
 3. **Redémarrez** votre serveur
 4. **Testez** avec `/zombiecount`
 
-## 📦 Installation Détaillée {#installation-détaillée}
+## Installation Détaillée
 
-### 1. Installation {#1-installation}
+### 1. Installation
 
 1. **Téléchargez** le dossier `Zombie-Spawner`
 2. **Placez-le** dans votre répertoire `resources/[nom_de_votre_serveur]/`
@@ -64,7 +64,7 @@ Un script complet pour créer et gérer des zombies dans votre serveur RedM avec
    ```
 4. **Redémarrez** votre serveur RedM
 
-### 2. Configuration de Base {#2-configuration-de-base}
+### 2. Configuration de Base
 
 #### Configuration des Zones
 Modifiez `config.lua` pour définir vos zones de spawn :
@@ -92,7 +92,7 @@ add_ace group.admin command.zombiecount allow
 add_ace group.moderator command.zombiecount allow
 ```
 
-### 3. Configuration Avancée {#3-configuration-avancée} 
+### 3. Configuration Avancée 
 
 #### A. Statistiques des Zombies
 ```lua
@@ -123,7 +123,7 @@ Config.zoneSettings = {
 }
 ```
 
-## 📋 Commandes Disponibles {#commandes-disponibles}
+## Commandes Disponibles
 
 | Commande | Description | Permission | Exemple |
 |----------|-------------|------------|---------|
@@ -131,7 +131,7 @@ Config.zoneSettings = {
 | `/clearzombies` | Supprime tous les zombies | Admin | `/clearzombies` |
 | `/spawnzombies <zone>` | Spawn un zombie dans une zone | Tous | `/spawnzombies 1` |
 
-## ✅ Vérification de l'Installation {#vérification-de-linstallation}
+## Vérification de l'Installation
 
 1. **Démarrez** votre serveur RedM
 2. **Connectez-vous** au serveur
@@ -147,9 +147,9 @@ Config.zoneSettings = {
    Commandes zombies chargées avec succès !
    ```
 
-## ⚙️ Configuration Détaillée {#configuration-détaillée}
+## Configuration Détaillée
 
-### Messages {#messages}
+### Messages
 
 Ces paramètres définissent les couleurs et le préfixe des messages
 
@@ -168,7 +168,7 @@ Config.messages = {
 }
 ```
 
-### Modèles de Zombies {#modèles-de-zombies} 
+### Modèles de Zombies 
 
 Cette table contient tous les modèles de zombies que le script peut utiliser.
 Le script en choisira un au hasard à chaque spawn.
@@ -187,7 +187,7 @@ Config.zombieModels = {
 }
 ```
 
-### Statistiques des Zombies {#statistiques-des-zombies}
+### Statistiques des Zombies
 
 Ces paramètres définissent les statistiques par défaut de tous les zombies.
 
@@ -206,7 +206,7 @@ Config.zombieStats = {
 }
 ```
 
-### Comportement au Combat {#comportement-au-combat}
+### Comportement au Combat
 
 Ces paramètres définissent le comportement des zombies au combat.
 
@@ -227,7 +227,7 @@ Config.combatBehavior = {
 }
 ```
 
-### Relations {#relations}
+### Relations
 
 Ces paramètres définissent comment les zombies réagissent aux autres entités.
 
@@ -250,7 +250,7 @@ Config.relationships = {
 }
 ```
 
-### Zones de Spawn {#zones-de-spawn}
+### Zones de Spawn
 
 Ces paramètres définissent les zones où les zombies peuvent spawner.
 
@@ -274,69 +274,29 @@ Config.spawnZones = {
 }
 ```
 
-### Statistiques des Zombies {#statistiques-des-zombies}
-
-Ces paramètres définissent les statistiques par défaut de tous les zombies.
-
-**PARAMÈTRES:**
-- `health`: Points de vie du zombie (recommandé: 100-500)
-- `accuracy`: Précision du tir (0.0 = jamais, 1.0 = toujours)
-- `speed`: Vitesse de déplacement (1.0 = normal, 0.5 = lent, 2.0 = rapide)
-- `aggression`: Agressivité (0.0 = passif, 1.0 = très agressif)
-
-```lua
-Config.zombieStats = {
-    health = 100.0,
-    accuracy = 0.3,
-    speed = 0.7,
-    aggression = 0.8
-}
-```
-
-### Comportement au Combat {#comportement-au-combat}
-
-Ces paramètres définissent le comportement des zombies au combat.
-
-**PARAMÈTRES:**
-- `combatAbility`: Niveau de compétence au combat (0-2)
-- `combatRange`: Distance de combat préférée (0-2)
-- `combatMovement`: Style de mouvement au combat (0-3)
-- `alwaysFight`: Attribut RedM (46)
-- `useMeleeWeapons`: Attribut RedM (5)
-
-```lua
-Config.combatBehavior = {
-    combatAbility = 2,
-    combatRange = 0,
-    combatMovement = 2,
-    alwaysFight = 46,
-    useMeleeWeapons = 5
-}
-```
-
-## 🏗️ Architecture Client-Serveur {#architecture-client-serveur}
+## Architecture Client-Serveur
 
 Le script utilise une architecture **client-serveur** pour une synchronisation optimale :
 
-### 🖥️ Côté Serveur (server/server.lua)
+### Côté Serveur (server/server.lua)
 - **Gestion des entités** : Spawn et suppression des zombies
 - **Synchronisation réseau** : Tous les joueurs voient les mêmes zombies
 - **Thread principal** : Contrôle automatique du spawn/nettoyage
 - **Persistance** : Les zombies restent même si un joueur se déconnecte
 
-### 🎮 Côté Client (client/client.lua)
+### Côté Client (client/client.lua)
 - **Interface utilisateur** : Affichage des marqueurs et messages
 - **Configuration locale** : Application des propriétés des zombies
 - **Communication** : Envoi des demandes au serveur
 - **Thread simplifié** : Uniquement pour l'affichage des marqueurs
 
-### 🔄 Communication Client ↔ Serveur
+### Communication Client ↔ Serveur
 1. **Commandes** → Le client envoie une demande au serveur
 2. **Traitement** → Le serveur effectue l'action (spawn/suppression)
 3. **Synchronisation** → L'entité est créée pour tous les clients
 4. **Feedback** → Le serveur confirme l'action au client demandeur
 
-## 📁 Structure du Script {#structure-du-script}
+## Structure du Script
 
 ```
 Zombie-Spawner/
@@ -349,7 +309,7 @@ Zombie-Spawner/
 └── fxmanifest.lua          # Manifest du script
 ```
 
-## 🆘 Support et Dépannage {#support-et-dépannage}
+## Support et Dépannage
 
 ### Problèmes Courants
 
@@ -383,7 +343,7 @@ Zombie-Spawner/
 3. **Redémarrez** le serveur
 4. **Vérifiez** que tout fonctionne
 
-## 📋 Informations Supplémentaires {#informations-supplémentaires}
+## Informations Supplémentaires
 
 ### Version et Changelog 
 
