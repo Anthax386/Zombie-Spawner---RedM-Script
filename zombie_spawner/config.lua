@@ -51,14 +51,6 @@ Config.zombieModels = {
 -- - accuracy: Précision du tir (0.0 = jamais, 1.0 = toujours)
 -- - speed: Vitesse de déplacement (1.0 = normal, 0.5 = lent, 2.0 = rapide)
 -- - aggression: Agressivité (0.0 = passif, 1.0 = très agressif)
--- - spawnRadius: Distance de spawn autour du joueur en mètres (recommandé: 30-100)
--- - maxZombies: Nombre maximum de zombies simultanés (recommandé: 5-30)
---
--- PROFILS PRÉDÉFINIS:
--- - Facile: health=100, accuracy=0.2, speed=0.8, maxZombies=5
--- - Normal: health=200, accuracy=0.3, speed=1.0, maxZombies=10
--- - Difficile: health=300, accuracy=0.6, speed=1.3, maxZombies=15
--- - Cauchemar: health=500, accuracy=0.9, speed=1.5, maxZombies=25
 -- ============================================================================
 
 Config.zombieStats = {
@@ -66,9 +58,7 @@ Config.zombieStats = {
     damageModifier = 1.5,
     accuracy = 0.3,
     speed = 1.0,
-    aggression = 0.8,
-    spawnRadius = 50.0,
-    maxZombies = 10
+    aggression = 0.8
 }
 
 -- ============================================================================

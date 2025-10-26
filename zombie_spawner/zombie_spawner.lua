@@ -23,6 +23,14 @@ local zoneSettings = Config.zoneSettings
 -- Variables pour tracker le temps de spawn par zone
 local lastSpawnTimeByZone = {}
 
+-- Pré-calcul des GetHashKey pour optimisation
+local HATES_PLAYER_HASH = GetHashKey("HATES_PLAYER")
+local PLAYER_HASH = GetHashKey("PLAYER")
+local CIVILIAN_HASH = GetHashKey("CIVILIAN")
+local GANG_HASH = GetHashKey("GANG")
+local ANIMAL_HASH = GetHashKey("ANIMAL")
+local WILD_ANIMAL_HASH = GetHashKey("WILD_ANIMAL")
+
 -- ============================================================================
 -- FONCTION: ConfigureZombie()
 -- DESCRIPTION: Configure les propriétés et relations d'un zombie
@@ -43,18 +51,18 @@ local function ConfigureZombie(zombie)
     SetPedCombatRange(zombie, combatBehavior.combatRange)
     SetPedCombatMovement(zombie, combatBehavior.combatMovement)
     
-    -- Configure les relations
-    SetPedRelationshipGroupHash(zombie, GetHashKey("HATES_PLAYER"))
-    SetRelationshipBetweenGroups(relationships.playerRelationship, GetHashKey("HATES_PLAYER"), GetHashKey("PLAYER"))
-    SetRelationshipBetweenGroups(relationships.playerRelationship, GetHashKey("PLAYER"), GetHashKey("HATES_PLAYER"))
-    SetRelationshipBetweenGroups(relationships.civilianRelationship, GetHashKey("HATES_PLAYER"), GetHashKey("CIVILIAN"))
-    SetRelationshipBetweenGroups(relationships.civilianRelationship, GetHashKey("CIVILIAN"), GetHashKey("HATES_PLAYER"))
-    SetRelationshipBetweenGroups(relationships.gangRelationship, GetHashKey("HATES_PLAYER"), GetHashKey("GANG"))
-    SetRelationshipBetweenGroups(relationships.gangRelationship, GetHashKey("GANG"), GetHashKey("HATES_PLAYER"))
-    SetRelationshipBetweenGroups(relationships.animalRelationship, GetHashKey("HATES_PLAYER"), GetHashKey("ANIMAL"))
-    SetRelationshipBetweenGroups(relationships.animalRelationship, GetHashKey("ANIMAL"), GetHashKey("HATES_PLAYER"))
-    SetRelationshipBetweenGroups(relationships.wildAnimalRelationship, GetHashKey("HATES_PLAYER"), GetHashKey("WILD_ANIMAL"))
-    SetRelationshipBetweenGroups(relationships.wildAnimalRelationship, GetHashKey("WILD_ANIMAL"), GetHashKey("HATES_PLAYER"))
+    -- Configure les relations (utilise les hashes pré-calculés)
+    SetPedRelationshipGroupHash(zombie, HATES_PLAYER_HASH)
+    SetRelationshipBetweenGroups(relationships.playerRelationship, HATES_PLAYER_HASH, PLAYER_HASH)
+    SetRelationshipBetweenGroups(relationships.playerRelationship, PLAYER_HASH, HATES_PLAYER_HASH)
+    SetRelationshipBetweenGroups(relationships.civilianRelationship, HATES_PLAYER_HASH, CIVILIAN_HASH)
+    SetRelationshipBetweenGroups(relationships.civilianRelationship, CIVILIAN_HASH, HATES_PLAYER_HASH)
+    SetRelationshipBetweenGroups(relationships.gangRelationship, HATES_PLAYER_HASH, GANG_HASH)
+    SetRelationshipBetweenGroups(relationships.gangRelationship, GANG_HASH, HATES_PLAYER_HASH)
+    SetRelationshipBetweenGroups(relationships.animalRelationship, HATES_PLAYER_HASH, ANIMAL_HASH)
+    SetRelationshipBetweenGroups(relationships.animalRelationship, ANIMAL_HASH, HATES_PLAYER_HASH)
+    SetRelationshipBetweenGroups(relationships.wildAnimalRelationship, HATES_PLAYER_HASH, WILD_ANIMAL_HASH)
+    SetRelationshipBetweenGroups(relationships.wildAnimalRelationship, WILD_ANIMAL_HASH, HATES_PLAYER_HASH)
 end
 
 -- ============================================================================
@@ -271,101 +279,6 @@ local function DrawZoneMarkers()
 end
 
 -- ============================================================================
--- FONCTION: GetRandomZombieCountInRadius()
--- DESCRIPTION: Compte les zombies aléatoires dans un rayon autour du joueur
--- PARAMÈTRES:
---   radius: Le rayon de recherche en mètres (optionnel, par défaut config)
--- RETOUR: Le nombre de zombies aléatoires dans le rayon
--- ============================================================================
-local function GetRandomZombieCountInRadius(radius)
-    -- Rayon par défaut depuis la configuration si non spécifié
-    radius = radius or randomSpawn.defaultSearchRadius
-    
-    -- Récupère la position du joueur UNE SEULE FOIS
-    local playerPed = PlayerPedId()
-    local playerCoords = GetEntityCoords(playerPed)
-    
-    local count = 0
-    local radiusSq = radius * radius  -- Pré-calcule le carré du rayon pour optimisation
-    
-    -- Parcourt tous les zombies
-    for _, zombie in ipairs(spawnedZombies) do
-        -- Vérifie si c'est un zombie aléatoire ET s'il est vivant
-        if zombie.isRandom and DoesEntityExist(zombie.handle) and not IsEntityDead(zombie.handle) then
-            -- Récupère la position du zombie
-            local zombieCoords = GetEntityCoords(zombie.handle)
-            
-            -- Calcule la distance au carré (plus rapide que la racine carrée)
-            local dx = playerCoords.x - zombieCoords.x
-            local dy = playerCoords.y - zombieCoords.y
-            local dz = playerCoords.z - zombieCoords.z
-            local distanceSq = dx * dx + dy * dy + dz * dz
-            
-            -- Vérifie si le zombie est dans le rayon
-            if distanceSq <= radiusSq then
-                count = count + 1
-            end
-        end
-    end
-    
-    return count
-end
-
--- ============================================================================
--- FONCTION: GetRandomZombiesInRadius()
--- DESCRIPTION: Retourne la liste des zombies aléatoires dans un rayon
--- PARAMÈTRES:
---   radius: Le rayon de recherche en mètres (optionnel, par défaut config)
--- RETOUR: Une table avec les zombies trouvés et leurs distances
--- ============================================================================
-local function GetRandomZombiesInRadius(radius)
-    -- Rayon par défaut depuis la configuration si non spécifié
-    radius = radius or randomSpawn.defaultSearchRadius
-    
-    -- Récupère la position du joueur UNE SEULE FOIS
-    local playerPed = PlayerPedId()
-    local playerCoords = GetEntityCoords(playerPed)
-    
-    local zombiesInRadius = {}
-    local radiusSq = radius * radius  -- Pré-calcule le carré du rayon pour optimisation
-    
-    -- Parcourt tous les zombies
-    for _, zombie in ipairs(spawnedZombies) do
-        -- Vérifie si c'est un zombie aléatoire ET s'il est vivant
-        if zombie.isRandom and DoesEntityExist(zombie.handle) and not IsEntityDead(zombie.handle) then
-            -- Récupère la position du zombie
-            local zombieCoords = GetEntityCoords(zombie.handle)
-            
-            -- Calcule la distance au carré (plus rapide que la racine carrée)
-            local dx = playerCoords.x - zombieCoords.x
-            local dy = playerCoords.y - zombieCoords.y
-            local dz = playerCoords.z - zombieCoords.z
-            local distanceSq = dx * dx + dy * dy + dz * dz
-            
-            -- Vérifie si le zombie est dans le rayon
-            if distanceSq <= radiusSq then
-                -- Calcule la vraie distance pour l'affichage
-                local distance = math.sqrt(distanceSq)
-                
-                -- Ajoute le zombie à la liste avec sa distance
-                table.insert(zombiesInRadius, {
-                    handle = zombie.handle,
-                    distance = distance,
-                    coords = zombieCoords
-                })
-            end
-        end
-    end
-    
-    -- Trie les zombies par distance (du plus proche au plus loin)
-    table.sort(zombiesInRadius, function(a, b)
-        return a.distance < b.distance
-    end)
-    
-    return zombiesInRadius
-end
-
--- ============================================================================
 -- THREAD PRINCIPAL
 -- DESCRIPTION: Boucle qui s'exécute en continu pour gérer les zombies par zone
 -- ============================================================================
@@ -410,34 +323,6 @@ Citizen.CreateThread(function()
                     -- Met à jour le temps du dernier spawn pour cette zone
                     lastSpawnTimeByZone[zoneIndex] = currentTime
                 end
-            end
-        end
-        
-        -- ====================================================================
-        -- SPAWN ALÉATOIRE SUR LA MAP
-        -- ====================================================================
-        -- Vérifie si le spawn aléatoire est activé
-        if randomSpawn.enabled then
-            -- Récupère le temps actuel en millisecondes
-            local currentTime = GetGameTimer()
-            
-            -- Vérifie si l'intervalle de spawn est écoulé
-            if (currentTime - lastRandomSpawnTime) >= randomSpawn.spawnInterval then
-                -- Génère un nombre aléatoire pour la chance de spawn
-                -- math.random() génère un nombre entre 0 et 1
-                if math.random() < randomSpawn.spawnChance then
-                    -- Récupère le nombre actuel de zombies aléatoires vivants
-                    local currentRandomCount = GetRandomZombieCount()
-                    
-                    -- Vérifie si on peut spawner plus de zombies aléatoires
-                    if currentRandomCount < randomSpawn.maxRandomZombies then
-                        -- Spawn un zombie aléatoire
-                        SpawnRandomZombie()
-                    end
-                end
-                
-                -- Met à jour le temps du dernier spawn
-                lastRandomSpawnTime = currentTime
             end
         end
     end
@@ -508,7 +393,7 @@ RegisterCommand("setzombiestats", function(source, args, rawCommand)
         -- Affiche un message d'erreur avec les statistiques disponibles
         TriggerEvent("chat:addMessage", {
             color = messages.colors.error,
-            args = {messages.prefix, "Invalid stat. Available stats: health, damageModifier, accuracy, speed, aggression, spawnRadius, maxZombies"}
+            args = {messages.prefix, "Invalid stat. Available stats: health, damageModifier, accuracy, speed, aggression"}
         })
         return
     end
@@ -542,138 +427,6 @@ RegisterCommand("setzombiestats", function(source, args, rawCommand)
         color = messages.colors.success,
         args = {messages.prefix, "Updated " .. stat .. " to " .. tostring(value)}
     })
-end)
-
--- ============================================================================
--- COMMANDE: /randomspawn
--- DESCRIPTION: Active/désactive le spawn aléatoire de zombies sur la map
--- UTILISATION: /randomspawn [on/off]
--- EXEMPLE: /randomspawn on (active le spawn aléatoire)
--- ============================================================================
-RegisterCommand("randomspawn", function(source, args, rawCommand)
-    -- Récupère l'argument (on ou off)
-    local action = args[1]
-    
-    if not action then
-        -- Affiche l'état actuel du spawn aléatoire
-        local status = randomSpawn.enabled and "activé" or "désactivé"
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.info,
-            args = {messages.prefix, "Spawn aléatoire est actuellement " .. status}
-        })
-        return
-    end
-    
-    action = action:lower()
-    
-    if action == "on" or action == "true" or action == "1" then
-        -- Active le spawn aléatoire
-        randomSpawn.enabled = true
-        lastRandomSpawnTime = GetGameTimer()
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.success,
-            args = {messages.prefix, "Spawn aléatoire activé!"}
-        })
-    elseif action == "off" or action == "false" or action == "0" then
-        -- Désactive le spawn aléatoire
-        randomSpawn.enabled = false
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.success,
-            args = {messages.prefix, "Spawn aléatoire désactivé!"}
-        })
-    else
-        -- Argument invalide
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.error,
-            args = {messages.prefix, "Usage: /randomspawn [on/off]"}
-        })
-    end
-end)
-
--- ============================================================================
--- COMMANDE: /randomspawnstats
--- DESCRIPTION: Affiche et modifie les paramètres du spawn aléatoire
--- UTILISATION: /randomspawnstats [paramètre] [valeur]
--- EXEMPLE: /randomspawnstats maxRandomZombies 10
--- ============================================================================
-RegisterCommand("randomspawnstats", function(source, args, rawCommand)
-    if #args < 1 then
-        -- Affiche les paramètres actuels
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.info,
-            args = {messages.prefix, "Paramètres du spawn aléatoire:"}
-        })
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.info,
-            args = {"", "spawnInterval: " .. randomSpawn.spawnInterval .. "ms"}
-        })
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.info,
-            args = {"", "minDistance: " .. randomSpawn.minDistance .. "m"}
-        })
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.info,
-            args = {"", "maxDistance: " .. randomSpawn.maxDistance .. "m"}
-        })
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.info,
-            args = {"", "maxRandomZombies: " .. randomSpawn.maxRandomZombies}
-        })
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.info,
-            args = {"", "spawnChance: " .. (randomSpawn.spawnChance * 100) .. "%"}
-        })
-        return
-    end
-    
-    local param = args[1]:lower()
-    local value = tonumber(args[2])
-    
-    if not value then
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.error,
-            args = {messages.prefix, "Usage: /randomspawnstats [param] [value]"}
-        })
-        return
-    end
-    
-    -- Modifie le paramètre demandé
-    if param == "spawninterval" then
-        randomSpawn.spawnInterval = value
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.success,
-            args = {messages.prefix, "spawnInterval mis à jour à " .. value .. "ms"}
-        })
-    elseif param == "mindistance" then
-        randomSpawn.minDistance = value
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.success,
-            args = {messages.prefix, "minDistance mis à jour à " .. value .. "m"}
-        })
-    elseif param == "maxdistance" then
-        randomSpawn.maxDistance = value
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.success,
-            args = {messages.prefix, "maxDistance mis à jour à " .. value .. "m"}
-        })
-    elseif param == "maxrandomzombies" then
-        randomSpawn.maxRandomZombies = value
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.success,
-            args = {messages.prefix, "maxRandomZombies mis à jour à " .. value}
-        })
-    elseif param == "spawnchance" then
-        randomSpawn.spawnChance = math.min(value / 100, 1.0)
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.success,
-            args = {messages.prefix, "spawnChance mis à jour à " .. (randomSpawn.spawnChance * 100) .. "%"}
-        })
-    else
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.error,
-            args = {messages.prefix, "Paramètre invalide. Disponibles: spawnInterval, minDistance, maxDistance, maxRandomZombies, spawnChance"}
-        })
-    end
 end)
 
 -- ============================================================================
@@ -825,63 +578,6 @@ RegisterCommand("addzonemarker", function(source, args, rawCommand)
         color = messages.colors.info,
         args = {"", "}"}
     })
-end)
-
--- ============================================================================
--- COMMANDE: /zombiesradius
--- DESCRIPTION: Affiche le nombre de zombies aléatoires dans un rayon
--- UTILISATION: /zombiesradius [rayon]
--- EXEMPLE: /zombiesradius 100 (affiche les zombies dans un rayon de 100m)
--- ============================================================================
-RegisterCommand("zombiesradius", function(source, args, rawCommand)
-    -- Récupère le rayon depuis les arguments (par défaut 100 mètres)
-    local radius = tonumber(args[1]) or 100.0
-    
-    -- Compte les zombies aléatoires dans le rayon
-    local count = GetRandomZombieCountInRadius(radius)
-    
-    -- Affiche le résultat
-    TriggerEvent("chat:addMessage", {
-        color = messages.colors.info,
-        args = {messages.prefix, "Zombies aléatoires dans un rayon de " .. radius .. "m: " .. count}
-    })
-end)
-
--- ============================================================================
--- COMMANDE: /zombieslist
--- DESCRIPTION: Affiche la liste des zombies aléatoires proches avec distances
--- UTILISATION: /zombieslist [rayon]
--- EXEMPLE: /zombieslist 150 (affiche les zombies dans un rayon de 150m)
--- ============================================================================
-RegisterCommand("zombieslist", function(source, args, rawCommand)
-    -- Récupère le rayon depuis les arguments (par défaut 100 mètres)
-    local radius = tonumber(args[1]) or 100.0
-    
-    -- Récupère la liste des zombies dans le rayon
-    local zombies = GetRandomZombiesInRadius(radius)
-    
-    -- Affiche le titre
-    TriggerEvent("chat:addMessage", {
-        color = messages.colors.info,
-        args = {messages.prefix, "Zombies aléatoires dans un rayon de " .. radius .. "m:"}
-    })
-    
-    -- Affiche chaque zombie avec sa distance
-    if #zombies == 0 then
-        TriggerEvent("chat:addMessage", {
-            color = messages.colors.info,
-            args = {"", "Aucun zombie trouvé"}
-        })
-    else
-        for i, zombie in ipairs(zombies) do
-            -- Arrondit la distance à 2 décimales
-            local distance = string.format("%.2f", zombie.distance)
-            TriggerEvent("chat:addMessage", {
-                color = messages.colors.info,
-                args = {"", i .. ". Distance: " .. distance .. "m"}
-            })
-        end
-    end
 end)
 
 -- ============================================================================
