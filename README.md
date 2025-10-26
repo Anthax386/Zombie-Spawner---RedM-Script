@@ -6,16 +6,16 @@ Un script complet pour créer et gérer des zombies dans votre serveur RedM avec
 
 ## 📋 Table des Matières
 
-- [🔧 Fonctionnalités](#-fonctionnalités)
-- [⚡ Prérequis Techniques](#-prérequis-techniques)
-- [🚀 Installation Rapide](#-installation-rapide)
-- [📦 Installation Détaillée](#-installation-détaillée)
-  - [Installation Automatique](#1-installation)
-  - [Configuration de Base](#2-configuration-de-base)
-  - [Configuration Avancée](#3-configuration-avancée)
-- [📋 Commandes Disponibles](#-commandes-disponibles)
-- [✅ Vérification de l'Installation](#-vérification-de-linstallation)
-- [⚙️ Configuration Détaillée](#-configuration-détaillée)
+- [🔧 Fonctionnalités](#fonctionnalités)
+- [⚡ Prérequis Techniques](#prérequis-techniques)
+- [🚀 Installation Rapide](#installation-rapide)
+- [📦 Installation Détaillée](#installation-détaillée)
+  - [Installation](#installation)
+  - [Configuration de Base](#configuration-de-base)
+  - [Configuration Avancée](#configuration-avancée)
+- [📋 Commandes Disponibles](#commandes-disponibles)
+- [✅ Vérification de l'Installation](#vérification-de-linstallation)
+- [⚙️ Configuration Détaillée](#configuration-détaillée)
   - [Messages](#messages)
   - [Modèles de Zombies](#modèles-de-zombies)
   - [Statistiques des Zombies](#statistiques-des-zombies)
@@ -23,10 +23,10 @@ Un script complet pour créer et gérer des zombies dans votre serveur RedM avec
   - [Relations](#relations)
   - [Zones de Spawn](#zones-de-spawn)
   - [Paramètres des Zones](#paramètres-des-zones)
-- [🏗️ Architecture Client-Serveur](#️-architecture-client-serveur)
-- [📁 Structure du Script](#-structure-du-script)
-- [🆘 Support et Dépannage](#-support-et-dépannage)
-- [📋 Informations Supplémentaires](#-informations-supplémentaires)
+- [🏗️ Architecture Client-Serveur](#architecture-client-serveur)
+- [📁 Structure du Script](#structure-du-script)
+- [🆘 Support et Dépannage](#support-et-dépannage)
+- [📋 Informations Supplémentaires](#informations-supplémentaires)
 
 ## 🔧 Fonctionnalités {#fonctionnalités}
 
@@ -66,7 +66,7 @@ Un script complet pour créer et gérer des zombies dans votre serveur RedM avec
 
 ### 2. Configuration de Base {#2-configuration-de-base}
 
-#### Configuration des Zones {#configuration-des-zones}
+#### Configuration des Zones
 Modifiez `config.lua` pour définir vos zones de spawn :
 
 ```lua
