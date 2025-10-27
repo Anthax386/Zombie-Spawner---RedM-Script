@@ -1,5 +1,6 @@
 -- Charge le fichier config.lua qui contient tous les paramètres
 require 'config'
+print("Script client Zombie Spawner chargé avec succès !")
 
 -- Table pour stocker tous les zombies avec leurs informations
 local spawnedZombies = {}

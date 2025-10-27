@@ -1,4 +1,5 @@
 -- Commandes pour gérer les zombies depuis la console ou le chat
+print("Commandes zombies chargées avec succès !")
 
 -- Copie la configuration pour les commandes
 local spawnZones = Config.spawnZones

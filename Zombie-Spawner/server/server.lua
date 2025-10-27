@@ -1,5 +1,6 @@
 -- server/server.lua
 -- Script serveur pour la gestion des zombies avec synchronisation réseau
+print("Script serveur Zombie Spawner chargé avec succès !")
 
 -- Table pour stocker tous les zombies avec leurs informations (côté serveur)
 local spawnedZombies = {}
