@@ -1,6 +1,8 @@
 Config = {}
 Lang = "Français"
 
+print("Config Zombie Spawner chargé avec succès !")
+
 Config.threadSettings = {
     threadInterval = 5000
 }
